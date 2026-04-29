@@ -70,10 +70,6 @@ export interface Submission {
   submitted_by_name: string;
   target_date: string;
   additional_notes: string;
-  google_sheets_row_id: string | null;
-  sync_status: 'pending' | 'synced' | 'failed';
-  sync_attempts: number;
-  sync_error: string | null;
   created_at: string;
   updated_at: string;
   is_deleted?: boolean;
@@ -82,8 +78,6 @@ export interface Submission {
 export interface DashboardStats {
   totalSubmissions: number;
   byCategory: Record<string, number>;
-  syncFailures: number;
-  lastSync: string | null;
 }
 
 export interface SubmissionsResponse {
@@ -106,5 +100,4 @@ export interface SubmissionFilters {
   category?: LabCategoryName;
   dateFrom?: string;
   dateTo?: string;
-  syncStatus?: 'pending' | 'synced' | 'failed';
 }

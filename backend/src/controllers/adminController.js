@@ -1,5 +1,4 @@
 import { supabaseService } from '../services/supabaseService.js';
-import { googleSheetsService } from '../services/googleSheetsService.js';
 import { SYNC_STATUS } from '../utils/constants.js';
 import { AsyncParser } from 'json2csv';
 
@@ -68,34 +67,6 @@ export const adminController = {
     }
   },
 
-  async retrySync(req, res, next) {
-    try {
-      const submission = await supabaseService.getSubmissionById(req.params.id);
-      if (!submission) return res.status(404).json({ success: false, message: 'Submission not found' });
-
-      const syncResult = await googleSheetsService.appendRow(submission);
-
-      await supabaseService.updateSubmission(req.params.id, {
-        sync_status: SYNC_STATUS.SYNCED,
-        google_sheets_row_id: syncResult.updatedRange,
-        sync_attempts: submission.sync_attempts + 1,
-        sync_error: null
-      });
-
-      res.json({ success: true, message: 'Sync retry successful' });
-    } catch (error) {
-      // Update attempts even on failure
-      const submission = await supabaseService.getSubmissionById(req.params.id);
-      if (submission) {
-        await supabaseService.updateSubmission(req.params.id, {
-          sync_attempts: submission.sync_attempts + 1,
-          sync_error: error.message
-        });
-      }
-      next(error);
-    }
-  },
-
   async exportCSV(req, res, next) {
     try {
       const { category, dateFrom, dateTo } = req.query;
@@ -112,7 +83,7 @@ export const adminController = {
       const fields = [
         'submission_date', 'school_name', 'school_code', 'contact_person',
         'contact_email', 'contact_phone', 'lab_category', 'submitted_by_name',
-        'target_date', 'sync_status'
+        'target_date'
       ];
       
       const opts = { fields };

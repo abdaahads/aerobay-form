@@ -9,7 +9,6 @@ export const adminService = {
     if (filters.category) params.set('category', filters.category);
     if (filters.dateFrom) params.set('dateFrom', filters.dateFrom);
     if (filters.dateTo) params.set('dateTo', filters.dateTo);
-    if (filters.syncStatus) params.set('syncStatus', filters.syncStatus);
     const response = await api.get(`/api/admin/submissions?${params.toString()}`);
     return response.data;
   },
@@ -31,11 +30,6 @@ export const adminService = {
 
   async getDashboardStats(): Promise<DashboardStats> {
     const response = await api.get('/api/admin/dashboard/stats');
-    return response.data;
-  },
-
-  async retrySync(id: string): Promise<{ success: boolean; message: string }> {
-    const response = await api.post(`/api/admin/submissions/${id}/retry-sync`);
     return response.data;
   },
 

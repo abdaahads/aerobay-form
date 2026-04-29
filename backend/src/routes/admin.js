@@ -13,6 +13,5 @@ router.get('/submissions', adminController.getSubmissions);
 router.get('/submissions/:id', adminController.getSubmission);
 router.put('/submissions/:id', adminController.updateSubmission);
 router.delete('/submissions/:id', adminController.deleteSubmission);
-router.post('/submissions/:id/retry-sync', adminController.retrySync);
 
 export default router;

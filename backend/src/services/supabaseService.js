@@ -47,7 +47,7 @@ export const supabaseService = {
     }
   },
 
-  async getSubmissions({ limit = 15, offset = 0, category, syncStatus, dateFrom, dateTo }) {
+  async getSubmissions({ limit = 15, offset = 0, category, dateFrom, dateTo }) {
     try {
       let query = supabase
         .from('form_submissions')
@@ -56,7 +56,6 @@ export const supabaseService = {
         .range(offset, offset + limit - 1);
 
       if (category) query = query.eq('lab_category', category);
-      if (syncStatus) query = query.eq('sync_status', syncStatus);
       if (dateFrom) query = query.gte('created_at', dateFrom);
       if (dateTo) query = query.lte('created_at', `${dateTo}T23:59:59.999Z`);
 
@@ -108,13 +107,7 @@ export const supabaseService = {
         .from('form_submissions')
         .select('*', { count: 'exact', head: true });
 
-      // Get sync failures count
-      const { count: syncFailures, error: syncError } = await supabase
-        .from('form_submissions')
-        .select('*', { count: 'exact', head: true })
-        .eq('sync_status', 'failed');
-
-      if (totalError || syncError) throw totalError || syncError;
+      if (totalError) throw totalError;
 
       // Group by category (Supabase RPC would be better, but doing it via JS for simplicity if counts are low,
       // or we can do multiple queries for the 4 categories since they are fixed)
@@ -131,9 +124,7 @@ export const supabaseService = {
 
       return {
         totalSubmissions: totalSubmissions || 0,
-        syncFailures: syncFailures || 0,
-        byCategory,
-        lastSync: new Date().toISOString() // Or get the max updated_at where sync_status='synced'
+        byCategory
       };
     } catch (error) {
       logger.error('Supabase getStats failed', { error: error.message });

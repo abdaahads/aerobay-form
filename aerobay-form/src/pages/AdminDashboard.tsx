@@ -19,7 +19,6 @@ export default function AdminDashboard() {
 
   // Filters
   const [filterCategory, setFilterCategory] = useState<string>('');
-  const [filterSyncStatus, setFilterSyncStatus] = useState<string>('');
   const [filterDateFrom, setFilterDateFrom] = useState('');
   const [filterDateTo, setFilterDateTo] = useState('');
 
@@ -41,7 +40,6 @@ export default function AdminDashboard() {
         limit,
         offset: (page - 1) * limit,
         category: filterCategory as LabCategoryName || undefined,
-        syncStatus: filterSyncStatus as 'pending' | 'synced' | 'failed' || undefined,
         dateFrom: filterDateFrom || undefined,
         dateTo: filterDateTo || undefined,
       });
@@ -52,7 +50,7 @@ export default function AdminDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [page, filterCategory, filterSyncStatus, filterDateFrom, filterDateTo]);
+  }, [page, filterCategory, filterDateFrom, filterDateTo]);
 
   useEffect(() => {
     fetchStats();
@@ -76,15 +74,7 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleRetrySync = async (id: string) => {
-    try {
-      await adminService.retrySync(id);
-      toast.success('Sync retry initiated');
-      fetchSubmissions();
-    } catch {
-      toast.error('Retry failed');
-    }
-  };
+
 
   const handleExportCSV = async () => {
     try {
@@ -107,18 +97,7 @@ export default function AdminDashboard() {
 
   const totalPages = Math.ceil(total / limit);
 
-  const syncStatusBadge = (status: string) => {
-    const colors: Record<string, string> = {
-      synced: '#10B981',
-      pending: '#F59E0B',
-      failed: '#EF4444',
-    };
-    return (
-      <span className="admin-badge" style={{ background: `${colors[status] || '#6B7280'}20`, color: colors[status] || '#6B7280' }}>
-        {status}
-      </span>
-    );
-  };
+
 
   return (
     <div className="admin-wrapper">
@@ -147,10 +126,6 @@ export default function AdminDashboard() {
               <div className="admin-stat-lbl">{cat}</div>
             </div>
           ))}
-          <div className="admin-stat-card admin-stat-danger">
-            <div className="admin-stat-val">{stats.syncFailures}</div>
-            <div className="admin-stat-lbl">Sync Failures</div>
-          </div>
         </div>
       )}
 
@@ -163,12 +138,7 @@ export default function AdminDashboard() {
           <option value="Advanced">Advanced</option>
           <option value="Premium">Premium</option>
         </select>
-        <select value={filterSyncStatus} onChange={(e) => { setFilterSyncStatus(e.target.value); setPage(1); }}>
-          <option value="">All Sync Status</option>
-          <option value="synced">Synced</option>
-          <option value="pending">Pending</option>
-          <option value="failed">Failed</option>
-        </select>
+
         <input type="date" value={filterDateFrom} onChange={(e) => { setFilterDateFrom(e.target.value); setPage(1); }} placeholder="From" />
         <input type="date" value={filterDateTo} onChange={(e) => { setFilterDateTo(e.target.value); setPage(1); }} placeholder="To" />
         <button className="admin-btn-primary" onClick={handleExportCSV}>
@@ -186,15 +156,14 @@ export default function AdminDashboard() {
               <th>Contact</th>
               <th>Category</th>
               <th>Items</th>
-              <th>Sync</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={7} style={{ textAlign: 'center', padding: '40px' }}>Loading…</td></tr>
+              <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px' }}>Loading…</td></tr>
             ) : submissions.length === 0 ? (
-              <tr><td colSpan={7} style={{ textAlign: 'center', padding: '40px', color: 'var(--ink-muted)' }}>No submissions found</td></tr>
+              <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: 'var(--ink-muted)' }}>No submissions found</td></tr>
             ) : (
               submissions.map(sub => (
                 <tr key={sub.id}>
@@ -206,13 +175,9 @@ export default function AdminDashboard() {
                   </td>
                   <td>{sub.lab_category}</td>
                   <td>{Array.isArray(sub.selected_items) ? sub.selected_items.length : 0}</td>
-                  <td>{syncStatusBadge(sub.sync_status)}</td>
                   <td>
                     <div className="admin-actions">
                       <button className="admin-action-btn" onClick={() => setSelectedSubmission(sub)} title="View">👁</button>
-                      {sub.sync_status === 'failed' && (
-                        <button className="admin-action-btn" onClick={() => handleRetrySync(sub.id)} title="Retry Sync">🔄</button>
-                      )}
                       <button className="admin-action-btn admin-action-delete" onClick={() => handleDelete(sub.id)} title="Delete">🗑</button>
                     </div>
                   </td>
@@ -250,7 +215,7 @@ export default function AdminDashboard() {
                 <div><strong>Category:</strong> {selectedSubmission.lab_category}</div>
                 <div><strong>Submitted By:</strong> {selectedSubmission.submitted_by_name}</div>
                 <div><strong>Target Date:</strong> {selectedSubmission.target_date || '—'}</div>
-                <div><strong>Sync Status:</strong> {syncStatusBadge(selectedSubmission.sync_status)}</div>
+
                 <div><strong>Created:</strong> {new Date(selectedSubmission.created_at).toLocaleString()}</div>
               </div>
 
@@ -289,12 +254,7 @@ export default function AdminDashboard() {
                 </div>
               )}
 
-              {selectedSubmission.sync_error && (
-                <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(239,68,68,0.08)', borderRadius: '8px' }}>
-                  <strong style={{ color: 'var(--danger)' }}>Sync Error:</strong>
-                  <p style={{ marginTop: '4px', fontSize: '13px', color: 'var(--danger)' }}>{selectedSubmission.sync_error}</p>
-                </div>
-              )}
+
             </div>
           </div>
         </div>
