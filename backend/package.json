@@ -1,0 +1,23 @@
+{
+  "name": "aerobay-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "cors": "^2.8.5",
+    "helmet": "^8.0.0",
+    "dotenv": "^16.4.5",
+    "express-validator": "^7.2.0",
+    "express-rate-limit": "^7.4.0",
+    "jsonwebtoken": "^9.0.2",
+    "@supabase/supabase-js": "^2.45.0",
+    "googleapis": "^140.0.1",
+    "morgan": "^1.10.0",
+    "json2csv": "^6.0.0-alpha.2"
+  }
+}
