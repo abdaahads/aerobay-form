@@ -1,0 +1,1739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AeroBay – Lab Requirement Form</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #0057FF;
+    --primary-light: #4D88FF;
+    --primary-dark: #0040B3;
+    --surface: rgba(255, 255, 255, 0.7);
+    --surface-alt: rgba(255, 255, 255, 0.5);
+    --surface-dark: rgba(10, 15, 44, 0.05);
+    --ink: #0A0F2C;
+    --ink-muted: #6B7280;
+    --ink-light: #9CA3AF;
+    --success: #10B981;
+    --danger: #EF4444;
+    --border-glass: rgba(255, 255, 255, 0.2);
+    --radius: 20px;
+    --radius-lg: 28px;
+    --radius-sm: 12px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: linear-gradient(135deg, #f8faff 0%, #f0f4ff 100%);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  /* ── Premium Animated Background ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(0, 87, 255, 0.08) 0%, transparent 40%),
+      radial-gradient(circle at 80% 70%, rgba(0, 87, 255, 0.06) 0%, transparent 40%);
+    pointer-events: none;
+    z-index: 0;
+    animation: float 20s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(10px, -10px); }
+  }
+
+  .page-wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  /* ── Header ── */
+  .form-header {
+    text-align: center;
+    margin-bottom: 40px;
+    animation: slideDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  .logo-mark {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 16px;
+    background: var(--surface);
+    border: 1px solid var(--border-glass);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 8px 32px rgba(0, 87, 255, 0.12);
+  }
+
+  .logo-mark svg { width: 28px; height: 28px; }
+
+  .form-header h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+    margin: 0 0 8px;
+    background: linear-gradient(135deg, var(--ink) 0%, var(--primary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .form-header p {
+    font-size: 16px;
+    color: var(--ink-muted);
+    font-weight: 400;
+  }
+
+  @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ── Form Card (Glass Container) ── */
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-lg);
+    backdrop-filter: blur(30px);
+    box-shadow: 
+      0 8px 32px rgba(0, 87, 255, 0.1),
+      inset 0 1px 1px rgba(255, 255, 255, 0.5);
+    padding: 40px;
+    animation: fadeIn 0.7s ease both;
+    animation-delay: 0.1s;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  /* ── Section Label ── */
+  .section-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--primary);
+    margin: 32px 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-label:first-of-type { margin-top: 0; }
+
+  .section-label::before {
+    content: '';
+    width: 4px;
+    height: 4px;
+    background: var(--primary);
+    border-radius: 50%;
+  }
+
+  /* ── Grid Layouts ── */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+
+  .grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+
+  @media (max-width: 768px) {
+    .grid-3 { grid-template-columns: 1fr; }
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+
+  /* ── Form Fields ── */
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .field label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  .field input,
+  .field select,
+  .field textarea {
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    color: var(--ink);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    backdrop-filter: blur(10px);
+  }
+
+  .field input::placeholder,
+  .field textarea::placeholder {
+    color: var(--ink-light);
+  }
+
+  .field input:focus,
+  .field select:focus,
+  .field textarea:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.9);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(0, 87, 255, 0.1);
+  }
+
+  /* ── Category Cards (Glass Design) ── */
+  .category-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin: 24px 0;
+  }
+
+  .category-card {
+    position: relative;
+    cursor: pointer;
+  }
+
+  .category-card input {
+    display: none;
+  }
+
+  .category-card .card-body {
+    background: var(--surface);
+    border: 1.5px solid var(--border-glass);
+    border-radius: var(--radius);
+    padding: 24px 20px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 4px 20px rgba(0, 87, 255, 0.08);
+  }
+
+  .category-card input:checked ~ .card-body {
+    background: linear-gradient(135deg, rgba(0, 87, 255, 0.15), rgba(0, 87, 255, 0.08));
+    border-color: var(--primary);
+    box-shadow: 0 8px 32px rgba(0, 87, 255, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+    transform: translateY(-4px);
+  }
+
+  .cat-icon {
+    font-size: 32px;
+    display: block;
+  }
+
+  .cat-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .cat-desc {
+    font-size: 12px;
+    color: var(--ink-muted);
+    line-height: 1.4;
+    min-height: 32px;
+  }
+
+  .cat-check {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border-glass);
+    border-radius: 50%;
+    margin-top: 8px;
+    transition: all 0.3s ease;
+  }
+
+  .category-card input:checked ~ .card-body .cat-check {
+    background: var(--primary);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--surface);
+  }
+
+  @media (max-width: 768px) {
+    .category-cards { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  }
+
+  /* ── Items Table ── */
+  .items-toolbar {
+    display: flex;
+    gap: 16px;
+    margin: 24px 0;
+    flex-wrap: wrap;
+  }
+
+  .search-wrap {
+    flex: 1;
+    min-width: 200px;
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .search-wrap svg {
+    position: absolute;
+    left: 12px;
+    color: var(--ink-muted);
+    pointer-events: none;
+  }
+
+  .search-wrap input {
+    width: 100%;
+    padding-left: 38px !important;
+  }
+
+  .filter-btns {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .filter-btn {
+    background: var(--surface-alt);
+    border: 1px solid var(--border-glass);
+    border-radius: 20px;
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink-muted);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+  }
+
+  .filter-btn:hover {
+    background: var(--surface);
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+
+  .filter-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+  }
+
+  .items-table-wrap {
+    overflow-x: auto;
+    margin: 20px 0;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-glass);
+    background: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(10px);
+  }
+
+  .items-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+
+  .items-table thead {
+    background: rgba(0, 87, 255, 0.05);
+    border-bottom: 1px solid var(--border-glass);
+  }
+
+  .items-table th {
+    padding: 16px 12px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--ink);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  .items-table td {
+    padding: 14px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  }
+
+  .items-table tbody tr {
+    transition: all 0.2s ease;
+  }
+
+  .items-table tbody tr:hover {
+    background: rgba(0, 87, 255, 0.03);
+  }
+
+  .items-table tbody tr.selected {
+    background: rgba(16, 185, 129, 0.08);
+  }
+
+  .item-name {
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .item-desc {
+    font-size: 12px;
+    color: var(--ink-muted);
+    margin-top: 2px;
+  }
+
+  /* ── Toggle Switch ── */
+  .toggle {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+  }
+
+  .toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: rgba(107, 114, 128, 0.2);
+    border-radius: 100px;
+    cursor: pointer;
+    transition: background 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border: 1px solid var(--border-glass);
+  }
+
+  .toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    left: 3px;
+    top: 2px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .toggle input:checked ~ .toggle-slider {
+    background: var(--success);
+    border-color: var(--success);
+  }
+
+  .toggle input:checked ~ .toggle-slider::before {
+    transform: translateX(20px);
+  }
+
+  /* ── Quantity Input ── */
+  .qty-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: center;
+  }
+
+  .qty-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: 1px solid var(--border-glass);
+    background: rgba(255, 255, 255, 0.6);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--ink-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    flex-shrink: 0;
+  }
+
+  .qty-btn:hover {
+    background: var(--surface);
+    border-color: var(--primary);
+    color: var(--primary);
+    transform: scale(1.08);
+  }
+
+  .qty-btn:active {
+    transform: scale(0.95);
+  }
+
+  .qty-num {
+    width: 48px;
+    text-align: center;
+    padding: 6px 8px;
+    font-size: 14px;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.4);
+    border: 1px solid var(--border-glass);
+    border-radius: 8px;
+  }
+
+  /* ── Summary Bar ── */
+  .summary-bar {
+    display: none;
+    background: var(--surface);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-sm);
+    padding: 20px 24px;
+    margin: 20px 0;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 4px 20px rgba(0, 87, 255, 0.1);
+    animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  .summary-bar.show {
+    display: grid;
+  }
+
+  .summary-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .summary-stat .val {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--primary);
+  }
+
+  .summary-stat .lbl {
+    font-size: 12px;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ── Extra Rows ── */
+  .extra-columns {
+    background: rgba(0, 87, 255, 0.06);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-sm);
+    padding: 20px;
+    margin: 24px 0;
+    backdrop-filter: blur(10px);
+  }
+
+  .extra-columns h4 {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  .extra-row {
+    display: grid;
+    grid-template-columns: 2fr 80px 2fr 40px;
+    gap: 12px;
+    margin-bottom: 12px;
+    align-items: center;
+  }
+
+  .extra-row input {
+    background: var(--surface);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    font-size: 13px;
+    transition: all 0.3s ease;
+  }
+
+  .extra-row input:focus {
+    border-color: var(--primary);
+    background: white;
+  }
+
+  .remove-extra-btn {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: var(--danger);
+    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .remove-extra-btn:hover {
+    background: var(--danger);
+    color: white;
+    transform: scale(1.05);
+  }
+
+  .add-extra-btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    margin-top: 12px;
+  }
+
+  .add-extra-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 87, 255, 0.3);
+  }
+
+  /* ── Divider ── */
+  .divider {
+    height: 1px;
+    background: var(--border-glass);
+    margin: 32px 0;
+  }
+
+  /* ── Submit Row ── */
+  .submit-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 40px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .btn-submit,
+  .btn-reset {
+    padding: 14px 32px;
+    border-radius: var(--radius-sm);
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .btn-submit {
+    background: var(--primary);
+    color: white;
+    border: none;
+    box-shadow: 0 8px 24px rgba(0, 87, 255, 0.3);
+  }
+
+  .btn-submit:hover {
+    background: var(--primary-dark);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(0, 87, 255, 0.4);
+  }
+
+  .btn-submit:active {
+    transform: translateY(-1px);
+  }
+
+  .btn-reset {
+    background: var(--surface-alt);
+    color: var(--ink-muted);
+    border: 1px solid var(--border-glass);
+    backdrop-filter: blur(10px);
+  }
+
+  .btn-reset:hover {
+    background: var(--surface);
+    color: var(--ink);
+    border-color: var(--primary);
+  }
+
+  .form-note {
+    font-size: 12px;
+    color: var(--ink-light);
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  /* ── Success Message ── */
+  #success-msg {
+    display: none;
+    background: rgba(16, 185, 129, 0.08);
+    border: 1px solid var(--success);
+    border-radius: var(--radius-sm);
+    padding: 20px;
+    margin-top: 24px;
+    align-items: center;
+    gap: 16px;
+    backdrop-filter: blur(10px);
+  }
+
+  #success-msg.show {
+    display: flex;
+    animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  #success-msg svg {
+    flex-shrink: 0;
+  }
+
+  #success-msg p {
+    font-size: 14px;
+    color: var(--success);
+    line-height: 1.6;
+  }
+
+  #success-msg strong {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+  }
+
+  /* ── Mobile Optimization ── */
+  @media (max-width: 768px) {
+    .form-card {
+      padding: 28px 20px;
+    }
+
+    .form-header h1 {
+      font-size: 24px;
+    }
+
+    .form-header p {
+      font-size: 14px;
+    }
+
+    .section-label {
+      font-size: 12px;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      padding: 12px 14px;
+      font-size: 16px;
+    }
+
+    .category-cards {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .category-card .card-body {
+      padding: 18px 16px;
+    }
+
+    .cat-icon {
+      font-size: 28px;
+    }
+
+    .cat-name {
+      font-size: 14px;
+    }
+
+    .cat-desc {
+      font-size: 11px;
+    }
+
+    .items-table {
+      font-size: 13px;
+    }
+
+    .items-table th,
+    .items-table td {
+      padding: 12px 8px;
+    }
+
+    .extra-row {
+      grid-template-columns: 1fr 60px 1fr 36px;
+      gap: 8px;
+    }
+
+    .search-wrap {
+      min-width: 100%;
+    }
+
+    .submit-row {
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .btn-submit,
+    .btn-reset {
+      width: 100%;
+      justify-content: center;
+      padding: 12px 24px;
+    }
+
+    .summary-bar {
+      grid-template-columns: 1fr;
+      gap: 16px;
+      padding: 16px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    body {
+      padding: 12px;
+    }
+
+    .form-card {
+      padding: 20px 16px;
+      border-radius: 16px;
+    }
+
+    .form-header h1 {
+      font-size: 20px;
+    }
+
+    .form-header {
+      margin-bottom: 28px;
+    }
+
+    .grid-2,
+    .grid-3 {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .category-cards {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .items-table {
+      font-size: 12px;
+    }
+
+    .extra-row {
+      grid-template-columns: 1fr 50px;
+      gap: 6px;
+      align-items: start;
+    }
+
+    .extra-row input:nth-child(2) {
+      display: none;
+    }
+
+    .submit-row {
+      margin-top: 24px;
+    }
+
+    .divider {
+      margin: 24px 0;
+    }
+
+    .section-label {
+      margin: 24px 0 16px;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="page-wrapper">
+
+  <!-- Header -->
+  <div class="form-header">
+    <div class="logo-mark">
+      <svg viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 22L15 5L27 22H3Z" fill="url(#grad)" opacity="0.95"/>
+        <circle cx="15" cy="18" r="4" fill="url(#grad)" opacity="0.6"/>
+        <path d="M10 22Q15 16 20 22" stroke="url(#grad)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <defs>
+          <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#0057FF;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#4D88FF;stop-opacity:1" />
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+    <h1>AeroBay</h1>
+    <p>Lab Setup Requirement Form</p>
+  </div>
+
+  <!-- Form Card -->
+  <div class="form-card">
+    <form id="mainForm" novalidate>
+
+      <!-- School Information -->
+      <div class="section-label">School Information</div>
+      <div class="grid-2">
+        <div class="field">
+          <label for="schoolName">School Name *</label>
+          <input type="text" id="schoolName" name="schoolName" placeholder="e.g. Delhi Public School" required>
+        </div>
+        <div class="field">
+          <label for="schoolCode">Institution Code</label>
+          <input type="text" id="schoolCode" name="schoolCode" placeholder="e.g. DPS-2024">
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="field">
+          <label for="contactName">Contact Person *</label>
+          <input type="text" id="contactName" name="contactName" placeholder="Full name" required>
+        </div>
+        <div class="field">
+          <label for="contactEmail">Email Address *</label>
+          <input type="email" id="contactEmail" name="contactEmail" placeholder="email@school.edu" required>
+        </div>
+        <div class="field">
+          <label for="contactPhone">Phone Number</label>
+          <input type="tel" id="contactPhone" name="contactPhone" placeholder="+91 XXXXX XXXXX">
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Lab Category -->
+      <div class="section-label">Lab Category</div>
+      <div class="category-cards" style="grid-template-columns: repeat(4, 1fr);">
+
+        <label class="category-card">
+          <input type="radio" name="labCategory" value="Basix" onchange="onCategoryChange(this)">
+          <div class="card-body">
+            <span class="cat-icon">🌱</span>
+            <span class="cat-name">Basix</span>
+            <span class="cat-desc">Entry-level kit to get started</span>
+            <div class="cat-check"></div>
+          </div>
+        </label>
+
+        <label class="category-card">
+          <input type="radio" name="labCategory" value="Standard" onchange="onCategoryChange(this)">
+          <div class="card-body">
+            <span class="cat-icon">🔬</span>
+            <span class="cat-name">Standard</span>
+            <span class="cat-desc">Core essentials for STEM</span>
+            <div class="cat-check"></div>
+          </div>
+        </label>
+
+        <label class="category-card">
+          <input type="radio" name="labCategory" value="Advanced" onchange="onCategoryChange(this)">
+          <div class="card-body">
+            <span class="cat-icon">⚙️</span>
+            <span class="cat-name">Advanced</span>
+            <span class="cat-desc">Extended toolkit & machines</span>
+            <div class="cat-check"></div>
+          </div>
+        </label>
+
+        <label class="category-card">
+          <input type="radio" name="labCategory" value="Premium" onchange="onCategoryChange(this)">
+          <div class="card-body">
+            <span class="cat-icon">🚀</span>
+            <span class="cat-name">Premium</span>
+            <span class="cat-desc">Full suite with exclusive gear</span>
+            <div class="cat-check"></div>
+          </div>
+        </label>
+
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Items Panel -->
+      <div id="items-panel" style="display: none;">
+        <div class="section-label" id="items-label">Item Selection</div>
+
+        <!-- Toolbar -->
+        <div class="items-toolbar">
+          <div class="search-wrap">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M10.5 10.5L14.5 14.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <input type="text" id="itemSearch" placeholder="Search items…" oninput="filterItems()">
+          </div>
+          <div class="filter-btns" id="filterBtns"></div>
+        </div>
+
+        <!-- Table -->
+        <div class="items-table-wrap">
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th style="width: 50%;">Item Name</th>
+                <th style="width: 12%;">Include</th>
+                <th style="width: 22%;">Quantity</th>
+                <th style="width: 16%;">Remarks</th>
+              </tr>
+            </thead>
+            <tbody id="itemsBody"></tbody>
+          </table>
+        </div>
+
+        <!-- Summary -->
+        <div class="summary-bar" id="summaryBar">
+          <div class="summary-stat">
+            <span class="val" id="stat-selected">0</span>
+            <span class="lbl">Items Selected</span>
+          </div>
+          <div class="summary-stat">
+            <span class="val" id="stat-total-qty">0</span>
+            <span class="lbl">Total Quantity</span>
+          </div>
+          <div class="summary-stat">
+            <span class="val" id="stat-category">—</span>
+            <span class="lbl">Lab Category</span>
+          </div>
+        </div>
+
+        <!-- Extra / Custom items -->
+        <div class="extra-columns">
+          <h4>✦ Additional Custom Items</h4>
+          <div id="extraRows">
+            <div class="extra-row">
+              <input type="text" placeholder="Item name" class="extra-name">
+              <input type="text" placeholder="Qty" class="extra-qty">
+              <input type="text" placeholder="Remarks" class="extra-remarks">
+              <button type="button" class="remove-extra-btn" onclick="removeExtra(this)" title="Remove">×</button>
+            </div>
+          </div>
+          <button type="button" class="add-extra-btn" onclick="addExtraRow()">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+            Add Item
+          </button>
+        </div>
+
+        <div class="divider"></div>
+      </div>
+
+      <!-- Submitted By -->
+      <div class="section-label">Submitted By</div>
+      <div class="grid-2">
+        <div class="field">
+          <label for="submitterName">Your Name *</label>
+          <input type="text" id="submitterName" name="submitterName" placeholder="Full name" required>
+        </div>
+        <div class="field">
+          <label for="targetDate">Target Setup Date</label>
+          <input type="text" id="targetDate" name="targetDate" placeholder="DD / MM / YYYY" onfocus="this.type='date'" onblur="if(!this.value)this.type='text'">
+        </div>
+      </div>
+
+      <div class="field" style="margin-top: 16px;">
+        <label for="remarks">Additional Notes / Remarks</label>
+        <textarea id="remarks" name="remarks" rows="3" style="resize: vertical; min-height: 90px;" placeholder="Any specific requirements, room dimensions, power specifications, etc."></textarea>
+      </div>
+
+      <!-- Success -->
+      <div id="success-msg">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <circle cx="14" cy="14" r="13" fill="var(--success)"/>
+          <path d="M8 14l4 4 8-8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <p><strong>Form submitted successfully!</strong><br>Our team will review your lab requirements and get in touch within 2 business days.</p>
+      </div>
+
+      <!-- Submit -->
+      <div class="submit-row">
+        <button type="submit" class="btn-submit">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M2 8h12M10 4l4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Submit
+        </button>
+        <button type="button" class="btn-reset" onclick="resetForm()">Reset Form</button>
+        <p class="form-note">Fields marked * are required.<br>Your data is handled securely.</p>
+      </div>
+
+    </form>
+  </div><!-- /form-card -->
+</div><!-- /page-wrapper -->
+
+<script>
+/* ─── Item Data ──────────────────────────────────────────── */
+const DATA = {
+  Basix: [
+    { group: "Machines & Models", items: [
+      { sno:1,  name: "Satellite Model", qty: 1 },
+      { sno:2,  name: "Weather Man", qty: 1 },
+      { sno:3,  name: "Wind Tunnel", qty: 1 },
+      { sno:4,  name: "3D Printer V3 SE", qty: 1 },
+      { sno:5,  name: "3D Pen", qty: 3 },
+      { sno:6,  name: "CNC Laser Engraver (10W)", qty: 1 },
+      { sno:7,  name: "3DP Jet Engine", qty: 1 },
+      { sno:8,  name: "AV-1RC Electronic RC Model", qty: 1 },
+      { sno:9,  name: "AV-2RC Electronic RC Model", qty: 1 },
+      { sno:10, name: "3D Model Airplane 37\"", qty: 2 },
+      { sno:11, name: "Delta RC Model (Assembled) Interceptor", qty: 1 },
+      { sno:12, name: "Drone - Programmable", qty: 1 },
+      { sno:13, name: "Starter Kit Hurricane", qty: 1 },
+      { sno:14, name: "Water Pressure Rocket Launcher", qty: 1 },
+      { sno:15, name: "Air Pressure Rocket Launcher", qty: 1 },
+      { sno:16, name: "Rover RC Model (Assembled)", qty: 1 },
+      { sno:17, name: "RC Motor Vehicle (Assembled)", qty: 1 },
+      { sno:18, name: "Robotic Arm", qty: 1 },
+      { sno:19, name: "Architectural Home", qty: 1 },
+      { sno:20, name: "Hydraulic Bridge", qty: 1 },
+      { sno:21, name: "GSLV Model Rocket", qty: 1 },
+      { sno:22, name: "Electromagnetic Train Kit", qty: 2 },
+    ]},
+    { group: "Mechanical Tools", items: [
+      { sno:23, name: "Cordless Drill bit", qty: 1 },
+      { sno:24, name: "Air Pump with pressure gauge", qty: 2 },
+      { sno:25, name: "Field Plastic Tool Box PTB16", qty: 1 },
+      { sno:26, name: "Junior-Saw", qty: 2 },
+      { sno:27, name: "Combination Plier", qty: 2 },
+      { sno:28, name: "Wire Stripping Plier", qty: 2 },
+      { sno:29, name: "Long Nose Plier", qty: 2 },
+      { sno:30, name: "Combination Spanner Set (12pc)", qty: 1 },
+      { sno:31, name: "Allen Key Set", qty: 1 },
+      { sno:32, name: "Screw Driver Set", qty: 2 },
+      { sno:33, name: "Mini Screw Driver Set", qty: 1 },
+      { sno:34, name: "Hot Air Gun", qty: 1 },
+      { sno:35, name: "Hammer", qty: 1 },
+      { sno:36, name: "Soft Face Hammer", qty: 1 },
+      { sno:37, name: "Sanding File 6\"", qty: 2 },
+      { sno:38, name: "Paper Cutter (Large)", qty: 5 },
+      { sno:39, name: "Paper Cutter (Small)", qty: 5 },
+      { sno:40, name: "Scissors", qty: 2 },
+      { sno:41, name: "Binder Clip 19mm", qty: 1 },
+      { sno:42, name: "Binder Clip 25mm", qty: 1 },
+      { sno:43, name: "Tweezer Set", qty: 1 },
+      { sno:44, name: "Propeller 8x4", qty: 5 },
+    ]},
+    { group: "Measuring Tools", items: [
+      { sno:45, name: "Vernier Callipers", qty: 1 },
+      { sno:46, name: "Weighing Machine upto 100kg", qty: 1 },
+      { sno:47, name: "Weighing Machine upto 5kg", qty: 1 },
+      { sno:48, name: "Directional Compass", qty: 1 },
+      { sno:49, name: "Measuring Tape (5m)", qty: 2 },
+      { sno:50, name: "Measuring Tape (30m)", qty: 1 },
+      { sno:51, name: "Steel Scale 12\"", qty: 3 },
+      { sno:52, name: "Steel Scale 24\"", qty: 3 },
+      { sno:53, name: "Set Square & Protector", qty: 5 },
+      { sno:54, name: "Multi-Meter", qty: 1 },
+    ]},
+    { group: "Electronic Tools", items: [
+      { sno:55, name: "Transmitter Medium Grade", qty: 2 },
+      { sno:56, name: "Soldering Machine with Wire", qty: 2 },
+      { sno:57, name: "Glue Gun", qty: 3 },
+      { sno:58, name: "All in one Field Battery Charger", qty: 1 },
+      { sno:59, name: "Digital Battery Capacity Checker", qty: 1 },
+      { sno:60, name: "BLDC Motor (Basic)", qty: 2 },
+      { sno:61, name: "BLDC Motor (Standard)", qty: 2 },
+      { sno:62, name: "Electronic Speed Controller", qty: 2 },
+      { sno:63, name: "Servo Metal Gear", qty: 5 },
+      { sno:64, name: "Servo Plastic Gear", qty: 3 },
+      { sno:65, name: "Simulator Cable", qty: 2 },
+      { sno:66, name: "Trainer Cable", qty: 1 },
+      { sno:67, name: "Robotics Activity Kit", qty: 1 },
+    ]},
+    { group: "Consumables", items: [
+      { sno:68, name: "3D Printer Filament", qty: 2 },
+      { sno:69, name: "Balsa Wood sheet 2 mm", qty: 2 },
+      { sno:70, name: "Balsa Wood sheet 3 mm", qty: 2 },
+      { sno:71, name: "Balsa Wood sheet 4 mm", qty: 2 },
+      { sno:72, name: "Balsa Wood sheet 6 mm", qty: 2 },
+      { sno:73, name: "Foam Sheet - Depron 5mm", qty: 2 },
+      { sno:74, name: "Foam Sheet - Styrofoam 8mm", qty: 2 },
+      { sno:75, name: "Li-Po Battery 1050mAh", qty: 3 },
+      { sno:76, name: "Li-Po Battery 2200mAh", qty: 2 },
+      { sno:77, name: "Rechargeable Cell 4pc with Charger", qty: 3 },
+      { sno:78, name: "Glue Stick", qty: 30 },
+      { sno:79, name: "Masking Tape", qty: 3 },
+      { sno:80, name: "Cello Tape", qty: 3 },
+      { sno:81, name: "Electric Tape", qty: 3 },
+      { sno:82, name: "Fibre Tape", qty: 1 },
+      { sno:83, name: "Fevicol", qty: 3 },
+      { sno:84, name: "Sand Paper (2m)", qty: 2 },
+      { sno:85, name: "Cable Tie (100pcs)", qty: 3 },
+      { sno:86, name: "Screw (200 Pcs)", qty: 1 },
+      { sno:87, name: "T-Alpin Box", qty: 1 },
+    ]},
+    { group: "Softwares", items: [
+      { sno:88, name: "Software for 3D Printing", qty: 2 },
+      { sno:89, name: "Software for Laser Engraver", qty: 1 },
+      { sno:90, name: "Software for Designing", qty: 2 },
+      { sno:91, name: "Software for Simulator", qty: 2 },
+    ]},
+    { group: "Safety Tools", items: [
+      { sno:92, name: "First Aid Kit", qty: 1 },
+      { sno:93, name: "Face Mask", qty: 300 },
+      { sno:94, name: "Polycarbonate Safety Goggle", qty: 20 },
+    ]},
+    { group: "Others", items: [
+      { sno:95,  name: "Peg Board", qty: 2 },
+      { sno:96,  name: "AeroBay Sign Board", qty: 1 },
+      { sno:97,  name: "Media", qty: 1 },
+      { sno:98,  name: "Acrylic Frames", qty: 6 },
+      { sno:99,  name: "Installation", qty: 1 },
+      { sno:100, name: "Delivery", qty: 1 },
+      { sno:101, name: "Air Show", qty: 1 },
+      { sno:102, name: "AMC & Machine Upgradation (Till March 2025)", qty: 1 },
+      { sno:103, name: "Hanging Plate", qty: 6 },
+      { sno:104, name: "Stem Board", qty: 1 },
+    ]},
+  ],
+  Standard: [
+    { group: "Machines & Models", items: [
+      { sno:1,  name: "Satellite Model", qty: 1 },
+      { sno:2,  name: "Weather Man", qty: 1 },
+      { sno:3,  name: "Wind Tunnel", qty: 1 },
+      { sno:4,  name: "3D Printer V3 SE", qty: 1 },
+      { sno:5,  name: "3D Pen", qty: 3 },
+      { sno:6,  name: "CNC Laser Engraver (10W)", qty: 1 },
+      { sno:7,  name: "3DP Jet Engine", qty: 1 },
+      { sno:8,  name: "AV-1RC Electronic RC Model", qty: 1 },
+      { sno:9,  name: "AV-2RC Electronic RC Model", qty: 1 },
+      { sno:10, name: "3D Model Airplane 37\"", qty: 2 },
+      { sno:11, name: "Delta RC Model Interceptor", qty: 1 },
+      { sno:12, name: "Drone - Programmable", qty: 1 },
+      { sno:13, name: "Starter Kit Hurricane", qty: 1 },
+      { sno:14, name: "Water Pressure Rocket Launcher", qty: 1 },
+      { sno:15, name: "Air Pressure Rocket Launcher", qty: 1 },
+      { sno:16, name: "Rover RC Model (Assembled)", qty: 1 },
+      { sno:17, name: "RC Motor Vehicle (Assembled)", qty: 1 },
+      { sno:18, name: "Robotic Arm", qty: 1 },
+      { sno:19, name: "Architectural Home", qty: 1 },
+      { sno:20, name: "Hydraulic Bridge", qty: 1 },
+      { sno:21, name: "GSLV Model Rocket", qty: 1 },
+      { sno:22, name: "Electromagnetic Train Kit", qty: 2 },
+    ]},
+    { group: "Mechanical Tools", items: [
+      { sno:23, name: "Cordless Drill bit", qty: 1 },
+      { sno:24, name: "Air Pump with pressure gauge", qty: 2 },
+      { sno:25, name: "Field Plastic Tool Box PTB16", qty: 1 },
+      { sno:26, name: "Junior-Saw", qty: 2 },
+      { sno:27, name: "Combination Plier", qty: 2 },
+      { sno:28, name: "Wire Stripping Plier", qty: 2 },
+      { sno:29, name: "Long Nose Plier", qty: 2 },
+      { sno:30, name: "Combination Spanner Set (12pc)", qty: 1 },
+      { sno:31, name: "Allen Key Set", qty: 1 },
+      { sno:32, name: "Screw Driver Set", qty: 2 },
+      { sno:33, name: "Mini Screw Driver Set", qty: 1 },
+      { sno:34, name: "Hot Air Gun", qty: 1 },
+      { sno:35, name: "Hammer", qty: 1 },
+      { sno:36, name: "Soft Face Hammer", qty: 1 },
+      { sno:37, name: "Sanding File 6\"", qty: 2 },
+      { sno:38, name: "Paper Cutter (Large)", qty: 5 },
+      { sno:39, name: "Paper Cutter (Small)", qty: 5 },
+      { sno:40, name: "Scissors", qty: 2 },
+      { sno:41, name: "Binder Clip 19mm", qty: 1 },
+      { sno:42, name: "Binder Clip 25mm", qty: 1 },
+      { sno:43, name: "Tweezer Set", qty: 1 },
+      { sno:44, name: "Propeller 8x4", qty: 5 },
+    ]},
+    { group: "Measuring Tools", items: [
+      { sno:45, name: "Vernier Callipers", qty: 1 },
+      { sno:46, name: "Weighing Machine upto 100kg", qty: 1 },
+      { sno:47, name: "Weighing Machine upto 5kg", qty: 1 },
+      { sno:48, name: "Directional Compass", qty: 1 },
+      { sno:49, name: "Measuring Tape (5m)", qty: 2 },
+      { sno:50, name: "Measuring Tape (30m)", qty: 1 },
+      { sno:51, name: "Steel Scale 12\"", qty: 3 },
+      { sno:52, name: "Steel Scale 24\"", qty: 3 },
+      { sno:53, name: "Set Square & Protector", qty: 5 },
+      { sno:54, name: "Multi-Meter", qty: 1 },
+    ]},
+    { group: "Electronic Tools", items: [
+      { sno:55, name: "Transmitter Medium Grade", qty: 2 },
+      { sno:56, name: "Soldering Machine with Wire", qty: 2 },
+      { sno:57, name: "Glue Gun", qty: 3 },
+      { sno:58, name: "All in one Field Battery Charger", qty: 1 },
+      { sno:59, name: "Digital Battery Capacity Checker", qty: 1 },
+      { sno:60, name: "BLDC Motor (Basic)", qty: 2 },
+      { sno:61, name: "BLDC Motor (Standard)", qty: 2 },
+      { sno:62, name: "Electronic Speed Controller", qty: 2 },
+      { sno:63, name: "Servo Metal Gear", qty: 5 },
+      { sno:64, name: "Servo Plastic Gear", qty: 3 },
+      { sno:65, name: "Simulator Cable", qty: 2 },
+      { sno:66, name: "Trainer Cable", qty: 1 },
+      { sno:67, name: "Robotics Activity Kit", qty: 1 },
+    ]},
+    { group: "Consumables", items: [
+      { sno:68, name: "3D Printer Filament", qty: 2 },
+      { sno:69, name: "Balsa Wood sheet 2 mm", qty: 2 },
+      { sno:70, name: "Balsa Wood sheet 3 mm", qty: 2 },
+      { sno:71, name: "Balsa Wood sheet 4 mm", qty: 2 },
+      { sno:72, name: "Balsa Wood sheet 6 mm", qty: 2 },
+      { sno:73, name: "Foam Sheet - Depron 5mm", qty: 2 },
+      { sno:74, name: "Foam Sheet - Styrofoam 8mm", qty: 2 },
+      { sno:75, name: "Li-Po Battery 1050mAh", qty: 3 },
+      { sno:76, name: "Li-Po Battery 2200mAh", qty: 2 },
+      { sno:77, name: "Rechargeable Cell 4pc with Charger", qty: 3 },
+      { sno:78, name: "Glue Stick", qty: 30 },
+      { sno:79, name: "Masking Tape", qty: 3 },
+      { sno:80, name: "Cello Tape", qty: 3 },
+      { sno:81, name: "Electric Tape", qty: 3 },
+      { sno:82, name: "Fibre Tape", qty: 1 },
+      { sno:83, name: "Fevicol", qty: 3 },
+      { sno:84, name: "Sand Paper (2m)", qty: 2 },
+      { sno:85, name: "Cable Tie (100pcs)", qty: 3 },
+      { sno:86, name: "Screw (200 Pcs)", qty: 1 },
+      { sno:87, name: "T-Alpin Box", qty: 1 },
+    ]},
+    { group: "Softwares", items: [
+      { sno:88, name: "Software for 3D Printing", qty: 2 },
+      { sno:89, name: "Software for Laser Engraver", qty: 1 },
+      { sno:90, name: "Software for Designing", qty: 2 },
+      { sno:91, name: "Software for Simulator", qty: 2 },
+    ]},
+    { group: "Safety Tools", items: [
+      { sno:92, name: "First Aid Kit", qty: 1 },
+      { sno:93, name: "Face Mask", qty: 300 },
+      { sno:94, name: "Polycarbonate Safety Goggle", qty: 20 },
+    ]},
+    { group: "Others", items: [
+      { sno:95,  name: "Peg Board", qty: 2 },
+      { sno:96,  name: "AeroBay Sign Board", qty: 1 },
+      { sno:97,  name: "Media", qty: 1 },
+      { sno:98,  name: "Acrylic Frames", qty: 6 },
+      { sno:99,  name: "Installation", qty: 1 },
+      { sno:100, name: "Delivery", qty: 1 },
+      { sno:101, name: "Air Show", qty: 1 },
+      { sno:102, name: "AMC & Machine Upgradation (Till March 2025)", qty: 1 },
+      { sno:103, name: "Hanging Plate", qty: 6 },
+      { sno:104, name: "Stem Board", qty: 1 },
+    ]},
+  ],
+  Advanced: [
+    { group: "Machines & Models", items: [
+      { sno:1,  name: "Satellite Model", qty: 1 },
+      { sno:2,  name: "Weather Man", qty: 1 },
+      { sno:3,  name: "Wind Tunnel", qty: 1 },
+      { sno:4,  name: "3D Printer V3 SE", qty: 1 },
+      { sno:5,  name: "3D Pen", qty: 3 },
+      { sno:6,  name: "CNC Laser Engraver (10W)", qty: 1 },
+      { sno:7,  name: "3DP Jet Engine", qty: 1 },
+      { sno:8,  name: "AV-1RC Electronic RC Model", qty: 1 },
+      { sno:9,  name: "AV-2RC Electronic RC Model", qty: 1 },
+      { sno:10, name: "3D Model Airplane 37\"", qty: 2 },
+      { sno:11, name: "Delta RC Model Interceptor", qty: 1 },
+      { sno:12, name: "Drone - Programmable", qty: 1 },
+      { sno:13, name: "Starter Kit Hurricane", qty: 1 },
+      { sno:14, name: "Water Pressure Rocket Launcher", qty: 1 },
+      { sno:15, name: "Air Pressure Rocket Launcher", qty: 1 },
+      { sno:16, name: "Rover RC Model (Assembled)", qty: 1 },
+      { sno:17, name: "RC Motor Vehicle (Assembled)", qty: 1 },
+      { sno:18, name: "Robotic Arm", qty: 1 },
+      { sno:19, name: "Architectural Home", qty: 1 },
+      { sno:20, name: "Hydraulic Bridge", qty: 1 },
+      { sno:21, name: "GSLV Model Rocket", qty: 1 },
+      { sno:22, name: "Electromagnetic Train Kit", qty: 2 },
+    ]},
+    { group: "Mechanical Tools", items: [
+      { sno:23, name: "Cordless Drill bit", qty: 1 },
+      { sno:24, name: "Air Pump with pressure gauge", qty: 2 },
+      { sno:25, name: "Field Plastic Tool Box PTB16", qty: 1 },
+      { sno:26, name: "Junior-Saw", qty: 2 },
+      { sno:27, name: "Combination Plier", qty: 2 },
+      { sno:28, name: "Wire Stripping Plier", qty: 2 },
+      { sno:29, name: "Long Nose Plier", qty: 2 },
+      { sno:30, name: "Combination Spanner Set (12pc)", qty: 1 },
+      { sno:31, name: "Allen Key Set", qty: 1 },
+      { sno:32, name: "Screw Driver Set", qty: 2 },
+      { sno:33, name: "Mini Screw Driver Set", qty: 1 },
+      { sno:34, name: "Hot Air Gun", qty: 1 },
+      { sno:35, name: "Hammer", qty: 1 },
+      { sno:36, name: "Soft Face Hammer", qty: 1 },
+      { sno:37, name: "Sanding File 6\"", qty: 2 },
+      { sno:38, name: "Paper Cutter (Large)", qty: 5 },
+      { sno:39, name: "Paper Cutter (Small)", qty: 5 },
+      { sno:40, name: "Scissors", qty: 2 },
+      { sno:41, name: "Binder Clip 19mm", qty: 1 },
+      { sno:42, name: "Binder Clip 25mm", qty: 1 },
+      { sno:43, name: "Tweezer Set", qty: 1 },
+      { sno:44, name: "Propeller 8x4", qty: 5 },
+    ]},
+    { group: "Measuring Tools", items: [
+      { sno:45, name: "Vernier Callipers", qty: 1 },
+      { sno:46, name: "Weighing Machine upto 100kg", qty: 1 },
+      { sno:47, name: "Weighing Machine upto 5kg", qty: 1 },
+      { sno:48, name: "Directional Compass", qty: 1 },
+      { sno:49, name: "Measuring Tape (5m)", qty: 2 },
+      { sno:50, name: "Measuring Tape (30m)", qty: 1 },
+      { sno:51, name: "Steel Scale 12\"", qty: 3 },
+      { sno:52, name: "Steel Scale 24\"", qty: 3 },
+      { sno:53, name: "Set Square & Protector", qty: 5 },
+      { sno:54, name: "Multi-Meter", qty: 1 },
+    ]},
+    { group: "Electronic Tools", items: [
+      { sno:55, name: "Transmitter Medium Grade", qty: 2 },
+      { sno:56, name: "Soldering Machine with Wire", qty: 2 },
+      { sno:57, name: "Glue Gun", qty: 3 },
+      { sno:58, name: "All in one Field Battery Charger", qty: 1 },
+      { sno:59, name: "Digital Battery Capacity Checker", qty: 1 },
+      { sno:60, name: "BLDC Motor (Basic)", qty: 2 },
+      { sno:61, name: "BLDC Motor (Standard)", qty: 2 },
+      { sno:62, name: "Electronic Speed Controller", qty: 2 },
+      { sno:63, name: "Servo Metal Gear", qty: 5 },
+      { sno:64, name: "Servo Plastic Gear", qty: 3 },
+      { sno:65, name: "Simulator Cable", qty: 2 },
+      { sno:66, name: "Trainer Cable", qty: 1 },
+      { sno:67, name: "Robotics Activity Kit", qty: 1 },
+    ]},
+    { group: "Consumables", items: [
+      { sno:68, name: "3D Printer Filament", qty: 2 },
+      { sno:69, name: "Balsa Wood sheet 2 mm", qty: 2 },
+      { sno:70, name: "Balsa Wood sheet 3 mm", qty: 2 },
+      { sno:71, name: "Balsa Wood sheet 4 mm", qty: 2 },
+      { sno:72, name: "Balsa Wood sheet 6 mm", qty: 2 },
+      { sno:73, name: "Foam Sheet - Depron 5mm", qty: 2 },
+      { sno:74, name: "Foam Sheet - Styrofoam 8mm", qty: 2 },
+      { sno:75, name: "Li-Po Battery 1050mAh", qty: 3 },
+      { sno:76, name: "Li-Po Battery 2200mAh", qty: 2 },
+      { sno:77, name: "Rechargeable Cell 4pc with Charger", qty: 3 },
+      { sno:78, name: "Glue Stick", qty: 30 },
+      { sno:79, name: "Masking Tape", qty: 3 },
+      { sno:80, name: "Cello Tape", qty: 3 },
+      { sno:81, name: "Electric Tape", qty: 3 },
+      { sno:82, name: "Fibre Tape", qty: 1 },
+      { sno:83, name: "Fevicol", qty: 3 },
+      { sno:84, name: "Sand Paper (2m)", qty: 2 },
+      { sno:85, name: "Cable Tie (100pcs)", qty: 3 },
+      { sno:86, name: "Screw (200 Pcs)", qty: 1 },
+      { sno:87, name: "T-Alpin Box", qty: 1 },
+    ]},
+    { group: "Softwares", items: [
+      { sno:88, name: "Software for 3D Printing", qty: 2 },
+      { sno:89, name: "Software for Laser Engraver", qty: 1 },
+      { sno:90, name: "Software for Designing", qty: 2 },
+      { sno:91, name: "Software for Simulator", qty: 2 },
+    ]},
+    { group: "Safety Tools", items: [
+      { sno:92, name: "First Aid Kit", qty: 1 },
+      { sno:93, name: "Face Mask", qty: 300 },
+      { sno:94, name: "Polycarbonate Safety Goggle", qty: 20 },
+    ]},
+    { group: "Others", items: [
+      { sno:95,  name: "Peg Board", qty: 2 },
+      { sno:96,  name: "AeroBay Sign Board", qty: 1 },
+      { sno:97,  name: "Media", qty: 1 },
+      { sno:98,  name: "Acrylic Frames", qty: 6 },
+      { sno:99,  name: "Installation", qty: 1 },
+      { sno:100, name: "Delivery", qty: 1 },
+      { sno:101, name: "Air Show", qty: 1 },
+      { sno:102, name: "AMC & Machine Upgradation (Till March 2025)", qty: 1 },
+      { sno:103, name: "Hanging Plate", qty: 6 },
+      { sno:104, name: "Stem Board", qty: 1 },
+    ]},
+  ],
+  Premium: [
+    { group: "Machines & Models", items: [
+      { sno:1,  name: "Satellite Model", qty: 1 },
+      { sno:2,  name: "Weather Man", qty: 1 },
+      { sno:3,  name: "Wind Tunnel", qty: 1 },
+      { sno:4,  name: "3D Printer V3 SE", qty: 1 },
+      { sno:5,  name: "3D Pen", qty: 3 },
+      { sno:6,  name: "CNC Laser Engraver (10W)", qty: 1 },
+      { sno:7,  name: "3DP Jet Engine", qty: 1 },
+      { sno:8,  name: "AV-1RC Electronic RC Model", qty: 1 },
+      { sno:9,  name: "AV-2RC Electronic RC Model", qty: 1 },
+      { sno:10, name: "3D Model Airplane 37\"", qty: 2 },
+      { sno:11, name: "Delta RC Model Interceptor", qty: 1 },
+      { sno:12, name: "Drone - Programmable", qty: 1 },
+      { sno:13, name: "Starter Kit Hurricane", qty: 1 },
+      { sno:14, name: "Water Pressure Rocket Launcher", qty: 1 },
+      { sno:15, name: "Air Pressure Rocket Launcher", qty: 1 },
+      { sno:16, name: "Rover RC Model (Assembled)", qty: 1 },
+      { sno:17, name: "RC Motor Vehicle (Assembled)", qty: 1 },
+      { sno:18, name: "Robotic Arm", qty: 1 },
+      { sno:19, name: "Architectural Home", qty: 1 },
+      { sno:20, name: "Hydraulic Bridge", qty: 1 },
+      { sno:21, name: "GSLV Model Rocket", qty: 1 },
+      { sno:22, name: "Electromagnetic Train Kit", qty: 2 },
+      { sno:23, name: "Circular Saw", qty: 1 },
+      { sno:24, name: "Swan RC Model", qty: 1 },
+      { sno:25, name: "Sewing Machine", qty: 1 },
+      { sno:26, name: "Computerized Embroidery Machine", qty: 1 },
+      { sno:27, name: "Microscope", qty: 1 },
+      { sno:28, name: "Engine", qty: 1 },
+      { sno:29, name: "Transmitter FSi6", qty: 1 },
+      { sno:30, name: "Engine Fuel", qty: 1 },
+    ]},
+    { group: "Mechanical Tools", items: [
+      { sno:31, name: "Cordless Drill bit", qty: 1 },
+      { sno:32, name: "Air Pump with pressure gauge", qty: 2 },
+      { sno:33, name: "Field Plastic Tool Box PTB16", qty: 1 },
+      { sno:34, name: "Junior-Saw", qty: 2 },
+      { sno:35, name: "Combination Plier", qty: 2 },
+      { sno:36, name: "Wire Stripping Plier", qty: 2 },
+      { sno:37, name: "Long Nose Plier", qty: 2 },
+      { sno:38, name: "Combination Spanner Set (12pc)", qty: 1 },
+      { sno:39, name: "Allen Key Set", qty: 1 },
+      { sno:40, name: "Screw Driver Set", qty: 2 },
+      { sno:41, name: "Mini Screw Driver Set", qty: 1 },
+      { sno:42, name: "Hot Air Gun", qty: 1 },
+      { sno:43, name: "Hammer", qty: 1 },
+      { sno:44, name: "Soft Face Hammer", qty: 1 },
+      { sno:45, name: "Sanding File 6\"", qty: 2 },
+      { sno:46, name: "Paper Cutter (Large)", qty: 5 },
+      { sno:47, name: "Paper Cutter (Small)", qty: 5 },
+      { sno:48, name: "Scissors", qty: 2 },
+      { sno:49, name: "Binder Clip 19mm", qty: 1 },
+      { sno:50, name: "Binder Clip 25mm", qty: 1 },
+      { sno:51, name: "Tweezer Set", qty: 1 },
+      { sno:52, name: "Propeller 8x4", qty: 5 },
+    ]},
+    { group: "Measuring Tools", items: [
+      { sno:53, name: "Vernier Callipers", qty: 1 },
+      { sno:54, name: "Weighing Machine upto 100kg", qty: 1 },
+      { sno:55, name: "Weighing Machine upto 5kg", qty: 1 },
+      { sno:56, name: "Directional Compass", qty: 1 },
+      { sno:57, name: "Measuring Tape (5m)", qty: 2 },
+      { sno:58, name: "Measuring Tape (30m)", qty: 1 },
+      { sno:59, name: "Steel Scale 12\"", qty: 3 },
+      { sno:60, name: "Steel Scale 24\"", qty: 3 },
+      { sno:61, name: "Set Square & Protector", qty: 5 },
+      { sno:62, name: "Multi-Meter", qty: 1 },
+    ]},
+    { group: "Electronic Tools", items: [
+      { sno:63, name: "Transmitter Medium Grade", qty: 2 },
+      { sno:64, name: "Soldering Machine with Wire", qty: 2 },
+      { sno:65, name: "Glue Gun", qty: 3 },
+      { sno:66, name: "All in one Field Battery Charger", qty: 1 },
+      { sno:67, name: "Digital Battery Capacity Checker", qty: 1 },
+      { sno:68, name: "BLDC Motor (Basic)", qty: 2 },
+      { sno:69, name: "BLDC Motor (Standard)", qty: 2 },
+      { sno:70, name: "Electronic Speed Controller", qty: 2 },
+      { sno:71, name: "Servo Metal Gear", qty: 5 },
+      { sno:72, name: "Servo Plastic Gear", qty: 3 },
+      { sno:73, name: "Simulator Cable", qty: 2 },
+      { sno:74, name: "Trainer Cable", qty: 1 },
+      { sno:75, name: "Robotics Activity Kit", qty: 1 },
+    ]},
+    { group: "Consumables", items: [
+      { sno:76, name: "3D Printer Filament", qty: 2 },
+      { sno:77, name: "Balsa Wood sheet 2 mm", qty: 2 },
+      { sno:78, name: "Balsa Wood sheet 3 mm", qty: 2 },
+      { sno:79, name: "Balsa Wood sheet 4 mm", qty: 2 },
+      { sno:80, name: "Balsa Wood sheet 6 mm", qty: 2 },
+      { sno:81, name: "Foam Sheet - Depron 5mm", qty: 2 },
+      { sno:82, name: "Foam Sheet - Styrofoam 8mm", qty: 2 },
+      { sno:83, name: "Li-Po Battery 1050mAh", qty: 3 },
+      { sno:84, name: "Li-Po Battery 2200mAh", qty: 2 },
+      { sno:85, name: "Rechargeable Cell 4pc with Charger", qty: 3 },
+      { sno:86, name: "Glue Stick", qty: 30 },
+      { sno:87, name: "Masking Tape", qty: 3 },
+      { sno:88, name: "Cello Tape", qty: 3 },
+      { sno:89, name: "Electric Tape", qty: 3 },
+      { sno:90, name: "Fibre Tape", qty: 1 },
+      { sno:91, name: "Fevicol", qty: 3 },
+      { sno:92, name: "Sand Paper (2m)", qty: 2 },
+      { sno:93, name: "Cable Tie (100pcs)", qty: 3 },
+      { sno:94, name: "Screw (200 Pcs)", qty: 1 },
+      { sno:95, name: "T-Alpin Box", qty: 1 },
+    ]},
+    { group: "Softwares", items: [
+      { sno:96, name: "Software for 3D Printing", qty: 2 },
+      { sno:97, name: "Software for Laser Engraver", qty: 1 },
+      { sno:98, name: "Software for Designing", qty: 2 },
+      { sno:99, name: "Software for Simulator", qty: 2 },
+    ]},
+    { group: "Safety Tools", items: [
+      { sno:100, name: "First Aid Kit", qty: 1 },
+      { sno:101, name: "Face Mask", qty: 300 },
+      { sno:102, name: "Polycarbonate Safety Goggle", qty: 20 },
+    ]},
+    { group: "Others", items: [
+      { sno:103, name: "Peg Board", qty: 2 },
+      { sno:104, name: "AeroBay Sign Board", qty: 1 },
+      { sno:105, name: "Media", qty: 1 },
+      { sno:106, name: "Acrylic Frames", qty: 6 },
+      { sno:107, name: "Installation", qty: 1 },
+      { sno:108, name: "Delivery", qty: 1 },
+      { sno:109, name: "Air Show", qty: 1 },
+      { sno:110, name: "AMC & Machine Upgradation (Till March 2025)", qty: 1 },
+      { sno:111, name: "Hanging Plate", qty: 6 },
+      { sno:112, name: "Stem Board", qty: 1 },
+    ]},
+  ]
+};
+
+let selectedCategory = null;
+let itemData = [];
+let filteredData = [];
+
+function onCategoryChange(el) {
+  selectedCategory = el.value;
+  itemData = DATA[selectedCategory] || [];
+  buildTable();
+  document.getElementById('items-panel').style.display = 'block';
+  updateSummary();
+}
+
+function buildTable() {
+  const tbody = document.getElementById('itemsBody');
+  const filterContainer = document.getElementById('filterBtns');
+  tbody.innerHTML = '';
+  filterContainer.innerHTML = '';
+
+  const groups = [...new Set(itemData.map(g => g.group))];
+
+  groups.forEach(group => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'filter-btn active';
+    btn.textContent = group;
+    btn.onclick = () => {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b === btn));
+      filterItems();
+    };
+    filterContainer.appendChild(btn);
+  });
+
+  filteredData = itemData;
+  renderTable();
+}
+
+function filterItems() {
+  const search = document.getElementById('itemSearch').value.toLowerCase();
+  const activeGroups = Array.from(document.querySelectorAll('.filter-btn.active')).map(b => b.textContent);
+
+  filteredData = itemData.filter(group =>
+    activeGroups.includes(group.group) &&
+    group.items.some(item => item.name.toLowerCase().includes(search))
+  ).map(group => ({
+    ...group,
+    items: group.items.filter(item => item.name.toLowerCase().includes(search))
+  }));
+
+  renderTable();
+}
+
+function renderTable() {
+  const tbody = document.getElementById('itemsBody');
+  tbody.innerHTML = '';
+
+  filteredData.forEach(group => {
+    const headerRow = document.createElement('tr');
+    headerRow.style.cssText = 'background: rgba(0, 87, 255, 0.08); font-weight: 700;';
+    headerRow.innerHTML = `<td colspan="4" style="padding: 12px; font-size: 13px; color: var(--primary);">${group.group}</td>`;
+    tbody.appendChild(headerRow);
+
+    group.items.forEach(item => {
+      const row = document.createElement('tr');
+      row.className = 'item-row';
+      row.dataset.sno = item.sno;
+      row.innerHTML = `
+        <td class="item-name">
+          <span style="font-weight: 600;">${item.name}</span>
+        </td>
+        <td style="text-align: center;">
+          <label class="toggle">
+            <input type="checkbox" onchange="updateSummary(); updateRowState(this)">
+            <span class="toggle-slider"></span>
+          </label>
+        </td>
+        <td style="text-align: center;">
+          <div class="qty-input-wrap">
+            <button class="qty-btn" type="button" onclick="decreaseQty(this)">−</button>
+            <input type="number" class="qty-num" value="${item.qty}" min="1" max="999">
+            <button class="qty-btn" type="button" onclick="increaseQty(this)">+</button>
+          </div>
+        </td>
+        <td><input type="text" placeholder="Notes" style="width: 100%; padding: 6px 8px; border: 1px solid var(--border-glass); border-radius: 8px; background: var(--surface-alt); font-size: 12px;"></td>
+      `;
+      tbody.appendChild(row);
+    });
+  });
+}
+
+function updateRowState(checkbox) {
+  checkbox.closest('tr').classList.toggle('selected', checkbox.checked);
+}
+
+function increaseQty(btn) {
+  const input = btn.parentElement.querySelector('.qty-num');
+  input.value = Math.min(999, parseInt(input.value) + 1);
+  updateSummary();
+}
+
+function decreaseQty(btn) {
+  const input = btn.parentElement.querySelector('.qty-num');
+  input.value = Math.max(1, parseInt(input.value) - 1);
+  updateSummary();
+}
+
+function updateSummary() {
+  const rows = document.querySelectorAll('.item-row input[type="checkbox"]:checked');
+  const totalQty = Array.from(rows).reduce((sum, checkbox) => {
+    const row = checkbox.closest('tr');
+    const qty = parseInt(row.querySelector('.qty-num').value) || 0;
+    return sum + qty;
+  }, 0);
+
+  document.getElementById('stat-selected').textContent = rows.length;
+  document.getElementById('stat-total-qty').textContent = totalQty;
+  document.getElementById('stat-category').textContent = selectedCategory || '—';
+
+  const summaryBar = document.getElementById('summaryBar');
+  if (rows.length > 0) {
+    summaryBar.classList.add('show');
+  } else {
+    summaryBar.classList.remove('show');
+  }
+}
+
+function addExtraRow() {
+  const container = document.getElementById('extraRows');
+  const div = document.createElement('div');
+  div.className = 'extra-row';
+  div.innerHTML = `
+    <input type="text" placeholder="Item name" class="extra-name">
+    <input type="text" placeholder="Qty" class="extra-qty" style="max-width: 80px;">
+    <input type="text" placeholder="Remarks" class="extra-remarks">
+    <button type="button" class="remove-extra-btn" onclick="removeExtra(this)">×</button>
+  `;
+  container.appendChild(div);
+}
+
+function removeExtra(btn) {
+  btn.closest('.extra-row').remove();
+}
+
+function resetForm() {
+  document.getElementById('mainForm').reset();
+  document.getElementById('items-panel').style.display = 'none';
+  document.getElementById('summaryBar').classList.remove('show');
+  document.getElementById('success-msg').classList.remove('show');
+  selectedCategory = null;
+  document.querySelectorAll('.item-row').forEach(r => r.classList.remove('selected'));
+}
+
+document.getElementById('mainForm').onsubmit = (e) => {
+  e.preventDefault();
+  if (!document.getElementById('schoolName').value || !document.getElementById('contactName').value || !document.getElementById('contactEmail').value || !document.getElementById('submitterName').value) {
+    alert('Please fill all required fields');
+    return;
+  }
+  document.getElementById('success-msg').classList.add('show');
+  setTimeout(() => resetForm(), 2500);
+};
+</script>
+</body>
+</html>
