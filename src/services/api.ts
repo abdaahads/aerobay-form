@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE = '/api';
+// When deployed on Vercel, the API requests should just start with /api (which is already included in the route definitions)
+const API_BASE = '';
 
 const api = axios.create({
   baseURL: API_BASE,
