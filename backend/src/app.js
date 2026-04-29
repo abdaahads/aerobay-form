@@ -40,7 +40,7 @@ app.get('/health', (req, res) => {
 
 // 404 Handler
 app.use((req, res, next) => {
-  res.status(404).json({ success: false, message: 'Endpoint not found' });
+  res.status(404).json({ success: false, message: 'EXPRESS_ENDPOINT_NOT_FOUND', url: req.url, originalUrl: req.originalUrl });
 });
 
 // Global Error Handler
