@@ -3,7 +3,6 @@ import { Toaster } from 'react-hot-toast';
 import FormPage from './pages/FormPage';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
-import ProtectedRoute from './components/Common/ProtectedRoute';
 
 export default function App() {
   return (
