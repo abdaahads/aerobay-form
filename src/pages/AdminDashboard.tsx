@@ -6,6 +6,57 @@ import type { Submission, DashboardStats, LabCategoryName } from '../types';
 import toast from 'react-hot-toast';
 import '../styles/admin.css';
 
+const PieChart = ({ data }: { data: Record<string, number> }) => {
+  const total = Object.values(data).reduce((a, b) => a + Number(b), 0);
+  if (total === 0) return null;
+  let cumulativePercent = 0;
+  
+  const colors: Record<string, string> = {
+    Basix: '#4F46E5',
+    Standard: '#38BDF8',
+    Advanced: '#10B981',
+    Premium: '#F59E0B'
+  };
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+      <svg viewBox="-1 -1 2 2" style={{ transform: 'rotate(-90deg)', width: '120px', height: '120px' }}>
+        {Object.entries(data).map(([key, value]) => {
+          const val = Number(value);
+          if (val === 0) return null;
+          const percent = val / total;
+          const dasharray = `${percent * Math.PI * 2} ${Math.PI * 2}`;
+          const offset = cumulativePercent * Math.PI * 2;
+          cumulativePercent += percent;
+          
+          return (
+            <circle
+              key={key}
+              r="0.8"
+              cx="0"
+              cy="0"
+              fill="transparent"
+              stroke={colors[key] || '#ccc'}
+              strokeWidth="0.4"
+              strokeDasharray={dasharray}
+              strokeDashoffset={-offset}
+              style={{ transition: 'all 0.5s ease' }}
+            />
+          );
+        })}
+      </svg>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {Object.entries(data).map(([key, value]) => (
+          <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--ink)' }}>
+            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: colors[key] || '#ccc' }}></div>
+            <span style={{ fontFamily: 'Outfit', fontWeight: 500 }}>{key}:</span> {value as number}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 export default function AdminDashboard() {
   const { logout } = useAuthStore();
   const navigate = useNavigate();
@@ -113,19 +164,17 @@ export default function AdminDashboard() {
         </div>
       </header>
 
-      {/* Stats */}
+      {/* Stats & Infographics */}
       {stats && (
-        <div className="admin-stats-grid">
-          <div className="admin-stat-card">
-            <div className="admin-stat-val">{stats.totalSubmissions}</div>
-            <div className="admin-stat-lbl">Total Submissions</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', marginBottom: '32px' }}>
+          <div className="admin-stat-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <h3 style={{ fontFamily: 'Outfit', fontSize: '16px', color: 'var(--ink)', marginBottom: '16px' }}>Total Submissions</h3>
+            <div style={{ fontSize: '48px', fontWeight: 800, color: 'var(--primary)', lineHeight: 1 }}>{stats.totalSubmissions}</div>
           </div>
-          {Object.entries(stats.byCategory || {}).map(([cat, count]) => (
-            <div className="admin-stat-card" key={cat}>
-              <div className="admin-stat-val">{count as number}</div>
-              <div className="admin-stat-lbl">{cat}</div>
-            </div>
-          ))}
+          <div className="admin-stat-card">
+            <h3 style={{ fontFamily: 'Outfit', fontSize: '16px', color: 'var(--ink)', marginBottom: '16px' }}>Category Distribution</h3>
+            <PieChart data={stats.byCategory || {}} />
+          </div>
         </div>
       )}
 

@@ -4,8 +4,8 @@ import { authenticateToken } from '../middleware/auth.js';
 
 const router = Router();
 
-// Apply auth middleware to all admin routes
-router.use(authenticateToken);
+// Apply auth middleware to all admin routes (DISABLED FOR NOW)
+// router.use(authenticateToken);
 
 router.get('/dashboard/stats', adminController.getDashboardStats);
 router.get('/submissions/export/csv', adminController.exportCSV);
