@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { adminService } from '../services/adminService';
 import type { Submission, DashboardStats, LabCategoryName } from '../types';
+import { LAB_DATA } from '../data/labItems';
 import toast from 'react-hot-toast';
 import '../styles/admin.css';
 
@@ -97,7 +98,20 @@ export default function AdminDashboard() {
 
   const totalPages = Math.ceil(total / limit);
 
+  const missingItems = useMemo(() => {
+    if (!selectedSubmission) return [];
+    
+    // All items from the category
+    const categoryData = LAB_DATA[selectedSubmission.lab_category] || [];
+    const allLabItems = categoryData.flatMap(g => g.items);
 
+    // Selected items
+    const selected = selectedSubmission.selected_items || [];
+    const selectedNames = new Set(selected.map(item => item.name));
+
+    // Return items that are not in selected
+    return allLabItems.filter(item => !selectedNames.has(item.name));
+  }, [selectedSubmission]);
 
   return (
     <div className="admin-wrapper">
@@ -234,6 +248,19 @@ export default function AdminDashboard() {
                       <div key={i} className="admin-item-chip">
                         {item.name} × {item.quantity}
                         {item.remarks && <span style={{ fontSize: '11px', color: 'var(--ink-muted)' }}> — {item.remarks}</span>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {missingItems.length > 0 && (
+                <div style={{ marginTop: '16px' }}>
+                  <strong>Missing Items ({missingItems.length}):</strong>
+                  <div className="admin-items-list" style={{ marginTop: '8px' }}>
+                    {missingItems.map((item, i) => (
+                      <div key={i} className="admin-item-chip" style={{ opacity: 0.6 }}>
+                        {item.name} <span style={{ fontSize: '11px', marginLeft: '4px' }}>(Expected Qty: {item.qty})</span>
                       </div>
                     ))}
                   </div>
