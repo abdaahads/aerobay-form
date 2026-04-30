@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useFormStore } from '../../store/formStore';
 import { LAB_DATA } from '../../data/labItems';
 
@@ -15,7 +15,7 @@ export default function ItemSelectionTable() {
   const allGroupNames = useMemo(() => groups.map(g => g.group), [groups]);
 
   // Initialize active groups when category changes
-  useMemo(() => {
+  useEffect(() => {
     setActiveGroups(new Set(allGroupNames));
   }, [allGroupNames]);
 
