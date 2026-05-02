@@ -1,27 +1,14 @@
 /**
  * ── AdminDashboard Page ──
  *
- * This is the main admin page for managing AeroBay form submissions.
- * It provides a complete CRUD interface with the following capabilities:
- *
- *   READ    — Paginated table with filters (category, date range)
- *   CREATE  — N/A (submissions are created via the public form)
- *   UPDATE  — Edit modal reuses the form components (via formStore.loadSubmission)
- *   DELETE  — Soft confirmation via window.confirm(), then hard delete via API
- *
- * ADDITIONAL FEATURES:
- *   - Dashboard stats cards (total + per-category counts)
- *   - CSV export with current filter context
- *   - Fulfillment status badges (Pending / Partial / Fulfilled)
- *   - Tabbed View modal with Logistics & Shipment tracking
- *
- * SECURITY NOTE:
- *   Auth middleware on admin routes is currently DISABLED in backend/routes/admin.js.
- *   This means ALL admin endpoints are publicly accessible.
- *   See the audit report for details on re-enabling it.
+ * Main admin interface for AeroBay. Redesigned with logistics-first visibility:
+ *   - Fulfillment stats prominently displayed alongside submission counts
+ *   - Progress bar + percentage shown per row in the table
+ *   - Dedicated "Ship" action button for quick shipment logging
+ *   - View modal opens directly to Logistics tab when accessed via Ship button
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { adminService } from '../services/adminService';
@@ -33,37 +20,30 @@ import ViewSubmissionModal from '../components/Admin/ViewSubmissionModal';
 import toast from 'react-hot-toast';
 import '../styles/admin.css';
 
-// ── Component ───────────────────────────────────────────────────────────────
-
 export default function AdminDashboard() {
   const { logout } = useAuthStore();
   const navigate = useNavigate();
 
-  // ── Core State ──
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
 
-  // ── Modal State ──
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
+  const [selectedTab, setSelectedTab] = useState<'details' | 'logistics'>('details');
   const [editingSubmission, setEditingSubmission] = useState<Submission | null>(null);
   
-  // Form store reference — used to pre-populate the edit modal
   const store = useFormStore();
 
-  // ── Filter State ──
   const [filterCategory, setFilterCategory] = useState<string>('');
   const [filterDateFrom, setFilterDateFrom] = useState('');
   const [filterDateTo, setFilterDateTo] = useState('');
 
-  /** Number of rows per page. */
   const limit = 15;
 
   // ── Data Fetching ─────────────────────────────────────────────────────
 
-  /** Fetch aggregate statistics for the dashboard header cards. */
   const fetchStats = useCallback(async () => {
     try {
       const data = await adminService.getDashboardStats();
@@ -73,10 +53,6 @@ export default function AdminDashboard() {
     }
   }, []);
 
-  /**
-   * Fetch paginated submissions with the current filter context.
-   * Re-runs whenever page, filterCategory, or date filters change.
-   */
   const fetchSubmissions = useCallback(async () => {
     setLoading(true);
     try {
@@ -96,24 +72,28 @@ export default function AdminDashboard() {
     }
   }, [page, filterCategory, filterDateFrom, filterDateTo]);
 
-  /** Initial data load + re-fetch on filter/page changes. */
   useEffect(() => {
     fetchStats();
     fetchSubmissions();
   }, [fetchStats, fetchSubmissions]);
 
-  // ── Action Handlers ───────────────────────────────────────────────────
+  // ── Fulfillment Stats (computed from loaded submissions) ──────────────
 
-  /** Clear auth state and redirect to login page. */
-  const handleLogout = () => {
-    logout();
-    navigate('/admin/login');
-  };
+  const fulfillmentStats = useMemo(() => {
+    let pending = 0, partial = 0, fulfilled = 0;
+    submissions.forEach(sub => {
+      const status = getFulfillmentInfo(sub);
+      if (status.percentage === 0) pending++;
+      else if (status.percentage >= 100) fulfilled++;
+      else partial++;
+    });
+    return { pending, partial, fulfilled };
+  }, [submissions]);
 
-  /**
-   * Delete a submission after user confirmation.
-   * Uses window.confirm() for simplicity — consider a custom modal for production.
-   */
+  // ── Handlers ──────────────────────────────────────────────────────────
+
+  const handleLogout = () => { logout(); navigate('/admin/login'); };
+
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this submission?')) return;
     try {
@@ -126,27 +106,29 @@ export default function AdminDashboard() {
     }
   };
 
-  /**
-   * Open the edit modal for a submission.
-   * We load the submission data into the shared form store BEFORE rendering
-   * the modal, so all form components are pre-populated instantly.
-   */
   const handleEdit = (sub: Submission) => {
     store.loadSubmission(sub);
     setEditingSubmission(sub);
   };
 
-  /** After a successful edit, close the modal and refresh the table. */
   const handleEditSuccess = () => {
     setEditingSubmission(null);
     fetchSubmissions();
     fetchStats();
   };
 
-  /**
-   * Export filtered submissions as a CSV file.
-   * Creates a temporary <a> element to trigger the browser download.
-   */
+  /** Open view modal directly to the Logistics tab */
+  const handleOpenShipping = (sub: Submission) => {
+    setSelectedTab('logistics');
+    setSelectedSubmission(sub);
+  };
+
+  /** Open view modal to the Details tab */
+  const handleOpenDetails = (sub: Submission) => {
+    setSelectedTab('details');
+    setSelectedSubmission(sub);
+  };
+
   const handleExportCSV = async () => {
     try {
       const blob = await adminService.exportCSV({
@@ -166,44 +148,7 @@ export default function AdminDashboard() {
     }
   };
 
-  // ── Computed Values ───────────────────────────────────────────────────
-
   const totalPages = Math.ceil(total / limit);
-
-  /**
-   * Calculates the fulfillment status for a single submission by comparing
-   * total ordered quantities against total shipped quantities across all batches.
-   *
-   * Returns an object with { label, color, bg } for rendering the badge.
-   *
-   * Possible states:
-   *   - "Empty"     → no items in the order (edge case)
-   *   - "Pending"   → nothing shipped yet
-   *   - "Partial"   → some items shipped, but not all
-   *   - "Fulfilled" → all ordered quantities have been matched or exceeded
-   */
-  const getFulfillmentStatus = (sub: Submission) => {
-    const orderedItems = [
-      ...(sub.selected_items || []),
-      ...(sub.custom_items || []).map(c => ({ name: c.itemName, quantity: Number(c.quantity) || 1 }))
-    ];
-    if (orderedItems.length === 0) return { label: 'Empty', color: 'var(--ink-muted)', bg: 'var(--surface-alt)' };
-
-    let totalOrdered = 0;
-    let totalShipped = 0;
-
-    orderedItems.forEach(item => {
-      totalOrdered += item.quantity ? Number(item.quantity) : 1;
-      (sub.shipments || []).forEach(shipment => {
-        const shippedItem = shipment.items.find(i => i.name === (item.name || (item as any).itemName));
-        if (shippedItem) totalShipped += shippedItem.qty_shipped;
-      });
-    });
-
-    if (totalShipped === 0) return { label: 'Pending', color: 'var(--danger)', bg: 'rgba(239, 68, 68, 0.1)' };
-    if (totalShipped >= totalOrdered) return { label: 'Fulfilled', color: 'var(--success)', bg: 'rgba(16, 185, 129, 0.1)' };
-    return { label: 'Partial', color: 'var(--warning)', bg: 'rgba(245, 158, 11, 0.1)' };
-  };
 
   // ── Render ────────────────────────────────────────────────────────────
 
@@ -214,7 +159,7 @@ export default function AdminDashboard() {
       <header className="admin-header">
         <div className="admin-header-left">
           <h1>AeroBay Admin</h1>
-          <span className="admin-subtitle">Submissions Dashboard</span>
+          <span className="admin-subtitle">Orders & Logistics Dashboard</span>
         </div>
         <div className="admin-header-right">
           <a href="/" className="admin-btn-outline">← Back to Form</a>
@@ -222,12 +167,12 @@ export default function AdminDashboard() {
         </div>
       </header>
 
-      {/* ── Stats Cards ── */}
+      {/* ── Stats: Submission Counts + Fulfillment Overview ── */}
       {stats && (
-        <div className="admin-stats-grid">
+        <div className="admin-stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))' }}>
           <div className="admin-stat-card">
             <div className="admin-stat-val">{stats.totalSubmissions}</div>
-            <div className="admin-stat-lbl">Total Submissions</div>
+            <div className="admin-stat-lbl">Total Orders</div>
           </div>
           {Object.entries(stats.byCategory || {}).map(([cat, count]) => (
             <div className="admin-stat-card" key={cat}>
@@ -235,10 +180,23 @@ export default function AdminDashboard() {
               <div className="admin-stat-lbl">{cat}</div>
             </div>
           ))}
+          {/* Fulfillment-specific stats */}
+          <div className="admin-stat-card" style={{ borderLeft: '4px solid #EF4444' }}>
+            <div className="admin-stat-val" style={{ color: '#EF4444' }}>{fulfillmentStats.pending}</div>
+            <div className="admin-stat-lbl">Pending Shipment</div>
+          </div>
+          <div className="admin-stat-card" style={{ borderLeft: '4px solid #F59E0B' }}>
+            <div className="admin-stat-val" style={{ color: '#F59E0B' }}>{fulfillmentStats.partial}</div>
+            <div className="admin-stat-lbl">Partially Shipped</div>
+          </div>
+          <div className="admin-stat-card" style={{ borderLeft: '4px solid #10B981' }}>
+            <div className="admin-stat-val" style={{ color: '#10B981' }}>{fulfillmentStats.fulfilled}</div>
+            <div className="admin-stat-lbl">Fully Shipped</div>
+          </div>
         </div>
       )}
 
-      {/* ── Filters Bar ── */}
+      {/* ── Filters ── */}
       <div className="admin-filters">
         <select value={filterCategory} onChange={(e) => { setFilterCategory(e.target.value); setPage(1); }}>
           <option value="">All Categories</option>
@@ -247,25 +205,22 @@ export default function AdminDashboard() {
           <option value="Advanced">Advanced</option>
           <option value="Premium">Premium</option>
         </select>
-
-        <input type="date" value={filterDateFrom} onChange={(e) => { setFilterDateFrom(e.target.value); setPage(1); }} placeholder="From" />
-        <input type="date" value={filterDateTo} onChange={(e) => { setFilterDateTo(e.target.value); setPage(1); }} placeholder="To" />
-        <button className="admin-btn-primary" onClick={handleExportCSV}>
-          Export CSV
-        </button>
+        <input type="date" value={filterDateFrom} onChange={(e) => { setFilterDateFrom(e.target.value); setPage(1); }} />
+        <input type="date" value={filterDateTo} onChange={(e) => { setFilterDateTo(e.target.value); setPage(1); }} />
+        <button className="admin-btn-primary" onClick={handleExportCSV}>Export CSV</button>
       </div>
 
-      {/* ── Submissions Table ── */}
+      {/* ── Orders Table ── */}
       <div className="admin-table-wrap">
         <table className="admin-table">
           <thead>
             <tr>
               <th>Date</th>
-              <th>School Name</th>
-              <th>Contact</th>
+              <th>School</th>
               <th>Category</th>
               <th>Items</th>
-              <th>Fulfillment</th>
+              <th style={{ minWidth: '200px' }}>Fulfillment</th>
+              <th>Shipments</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -275,37 +230,61 @@ export default function AdminDashboard() {
             ) : submissions.length === 0 ? (
               <tr><td colSpan={7} style={{ textAlign: 'center', padding: '40px', color: 'var(--ink-muted)' }}>No submissions found</td></tr>
             ) : (
-              submissions.map(sub => (
-                <tr key={sub.id}>
-                  <td>{new Date(sub.created_at).toLocaleDateString()}</td>
-                  <td><strong>{sub.school_name}</strong></td>
-                  <td>
-                    <div>{sub.contact_person}</div>
-                    <div style={{ fontSize: '12px', color: 'var(--ink-muted)' }}>{sub.contact_email}</div>
-                  </td>
-                  <td>{sub.lab_category}</td>
-                  <td>{Array.isArray(sub.selected_items) ? sub.selected_items.length : 0}</td>
-                  <td>
-                    {/* Fulfillment status badge — computed per-row */}
-                    {(() => {
-                      const status = getFulfillmentStatus(sub);
-                      return (
-                        <span style={{ display: 'inline-block', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 600, color: status.color, background: status.bg }}>
-                          {status.label}
+              submissions.map(sub => {
+                const info = getFulfillmentInfo(sub);
+                return (
+                  <tr key={sub.id}>
+                    <td style={{ whiteSpace: 'nowrap' }}>{new Date(sub.created_at).toLocaleDateString()}</td>
+                    <td>
+                      <strong>{sub.school_name}</strong>
+                      <div style={{ fontSize: '12px', color: 'var(--ink-muted)' }}>{sub.contact_person}</div>
+                    </td>
+                    <td>
+                      <span style={{ display: 'inline-block', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, background: '#F1F5F9', color: 'var(--ink)' }}>
+                        {sub.lab_category}
+                      </span>
+                    </td>
+                    <td>{Array.isArray(sub.selected_items) ? sub.selected_items.length : 0}</td>
+
+                    {/* ── Fulfillment column with progress bar ── */}
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div className="fulfillment-progress-bar" style={{ flex: 1 }}>
+                          <div
+                            className="fulfillment-progress-fill"
+                            style={{
+                              width: `${info.percentage}%`,
+                              background: info.percentage >= 100 ? '#10B981' : info.percentage > 0 ? '#F59E0B' : '#E2E8F0'
+                            }}
+                          />
+                        </div>
+                        <span style={{ fontSize: '12px', fontWeight: 600, color: info.color, minWidth: '36px', textAlign: 'right' }}>
+                          {info.percentage}%
                         </span>
-                      );
-                    })()}
-                  </td>
-                  <td>
-                    {/* Action buttons: Edit, View, Delete */}
-                    <div className="admin-actions">
-                      <button className="admin-action-btn" onClick={() => handleEdit(sub)} title="Edit">✎</button>
-                      <button className="admin-action-btn" onClick={() => setSelectedSubmission(sub)} title="View">👁</button>
-                      <button className="admin-action-btn admin-action-delete" onClick={() => handleDelete(sub.id)} title="Delete">🗑</button>
-                    </div>
-                  </td>
-                </tr>
-              ))
+                      </div>
+                      <div style={{ fontSize: '11px', color: 'var(--ink-muted)', marginTop: '4px' }}>
+                        {info.shipped}/{info.ordered} units
+                      </div>
+                    </td>
+
+                    {/* ── Shipments count ── */}
+                    <td>
+                      <span style={{ fontWeight: 600 }}>{(sub.shipments || []).length}</span>
+                      <span style={{ color: 'var(--ink-muted)', fontSize: '12px', marginLeft: '4px' }}>batch{(sub.shipments || []).length !== 1 ? 'es' : ''}</span>
+                    </td>
+
+                    {/* ── Action Buttons ── */}
+                    <td>
+                      <div className="admin-actions">
+                        <button className="admin-action-btn admin-action-ship" onClick={() => handleOpenShipping(sub)} title="Ship / Track">📦</button>
+                        <button className="admin-action-btn" onClick={() => handleOpenDetails(sub)} title="View Details">👁</button>
+                        <button className="admin-action-btn" onClick={() => handleEdit(sub)} title="Edit">✎</button>
+                        <button className="admin-action-btn admin-action-delete" onClick={() => handleDelete(sub.id)} title="Delete">🗑</button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
@@ -320,10 +299,11 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* ── View Submission Modal (tabbed: Details + Logistics) ── */}
+      {/* ── View/Logistics Modal ── */}
       {selectedSubmission && (
         <ViewSubmissionModal 
           submission={selectedSubmission}
+          initialTab={selectedTab}
           onClose={() => setSelectedSubmission(null)}
           onRefresh={() => {
             fetchSubmissions();
@@ -333,7 +313,7 @@ export default function AdminDashboard() {
         />
       )}
 
-      {/* ── Edit Submission Modal (reuses Form components) ── */}
+      {/* ── Edit Modal ── */}
       {editingSubmission && (
         <EditSubmissionModal 
           submissionId={editingSubmission.id} 
@@ -343,4 +323,36 @@ export default function AdminDashboard() {
       )}
     </div>
   );
+}
+
+// ── Helper: Compute fulfillment percentage and counts for a submission ──
+
+function getFulfillmentInfo(sub: Submission) {
+  const orderedItems = [
+    ...(sub.selected_items || []),
+    ...(sub.custom_items || []).map(c => ({ name: c.itemName, quantity: Number(c.quantity) || 1 }))
+  ];
+  if (orderedItems.length === 0) return { percentage: 0, shipped: 0, ordered: 0, label: 'Empty', color: 'var(--ink-muted)' };
+
+  let totalOrdered = 0;
+  let totalShipped = 0;
+
+  orderedItems.forEach(item => {
+    const qty = item.quantity ? Number(item.quantity) : 1;
+    totalOrdered += qty;
+    (sub.shipments || []).forEach(shipment => {
+      const shippedItem = shipment.items.find(i => i.name === (item.name || (item as any).itemName));
+      if (shippedItem) totalShipped += shippedItem.qty_shipped;
+    });
+  });
+
+  const percentage = totalOrdered > 0 ? Math.min(100, Math.round((totalShipped / totalOrdered) * 100)) : 0;
+  
+  let color = 'var(--ink-muted)';
+  let label = 'Pending';
+  if (percentage >= 100) { color = '#10B981'; label = 'Fulfilled'; }
+  else if (percentage > 0) { color = '#F59E0B'; label = 'Partial'; }
+  else { color = '#EF4444'; label = 'Pending'; }
+
+  return { percentage, shipped: totalShipped, ordered: totalOrdered, label, color };
 }
