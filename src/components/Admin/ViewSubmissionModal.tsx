@@ -15,7 +15,7 @@
 import { useState, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import { adminService } from '../../services/adminService';
-import type { Submission, Shipment } from '../../types';
+import type { Submission } from '../../types';
 import { LAB_DATA } from '../../data/labItems';
 import ShipmentModal from './ShipmentModal';
 
