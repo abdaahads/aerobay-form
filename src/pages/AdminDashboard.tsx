@@ -1,3 +1,26 @@
+/**
+ * ── AdminDashboard Page ──
+ *
+ * This is the main admin page for managing AeroBay form submissions.
+ * It provides a complete CRUD interface with the following capabilities:
+ *
+ *   READ    — Paginated table with filters (category, date range)
+ *   CREATE  — N/A (submissions are created via the public form)
+ *   UPDATE  — Edit modal reuses the form components (via formStore.loadSubmission)
+ *   DELETE  — Soft confirmation via window.confirm(), then hard delete via API
+ *
+ * ADDITIONAL FEATURES:
+ *   - Dashboard stats cards (total + per-category counts)
+ *   - CSV export with current filter context
+ *   - Fulfillment status badges (Pending / Partial / Fulfilled)
+ *   - Tabbed View modal with Logistics & Shipment tracking
+ *
+ * SECURITY NOTE:
+ *   Auth middleware on admin routes is currently DISABLED in backend/routes/admin.js.
+ *   This means ALL admin endpoints are publicly accessible.
+ *   See the audit report for details on re-enabling it.
+ */
+
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
@@ -10,27 +33,37 @@ import ViewSubmissionModal from '../components/Admin/ViewSubmissionModal';
 import toast from 'react-hot-toast';
 import '../styles/admin.css';
 
+// ── Component ───────────────────────────────────────────────────────────────
+
 export default function AdminDashboard() {
   const { logout } = useAuthStore();
   const navigate = useNavigate();
 
+  // ── Core State ──
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+
+  // ── Modal State ──
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [editingSubmission, setEditingSubmission] = useState<Submission | null>(null);
   
+  // Form store reference — used to pre-populate the edit modal
   const store = useFormStore();
 
-  // Filters
+  // ── Filter State ──
   const [filterCategory, setFilterCategory] = useState<string>('');
   const [filterDateFrom, setFilterDateFrom] = useState('');
   const [filterDateTo, setFilterDateTo] = useState('');
 
+  /** Number of rows per page. */
   const limit = 15;
 
+  // ── Data Fetching ─────────────────────────────────────────────────────
+
+  /** Fetch aggregate statistics for the dashboard header cards. */
   const fetchStats = useCallback(async () => {
     try {
       const data = await adminService.getDashboardStats();
@@ -40,6 +73,10 @@ export default function AdminDashboard() {
     }
   }, []);
 
+  /**
+   * Fetch paginated submissions with the current filter context.
+   * Re-runs whenever page, filterCategory, or date filters change.
+   */
   const fetchSubmissions = useCallback(async () => {
     setLoading(true);
     try {
@@ -59,16 +96,24 @@ export default function AdminDashboard() {
     }
   }, [page, filterCategory, filterDateFrom, filterDateTo]);
 
+  /** Initial data load + re-fetch on filter/page changes. */
   useEffect(() => {
     fetchStats();
     fetchSubmissions();
   }, [fetchStats, fetchSubmissions]);
 
+  // ── Action Handlers ───────────────────────────────────────────────────
+
+  /** Clear auth state and redirect to login page. */
   const handleLogout = () => {
     logout();
     navigate('/admin/login');
   };
 
+  /**
+   * Delete a submission after user confirmation.
+   * Uses window.confirm() for simplicity — consider a custom modal for production.
+   */
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this submission?')) return;
     try {
@@ -81,17 +126,27 @@ export default function AdminDashboard() {
     }
   };
 
+  /**
+   * Open the edit modal for a submission.
+   * We load the submission data into the shared form store BEFORE rendering
+   * the modal, so all form components are pre-populated instantly.
+   */
   const handleEdit = (sub: Submission) => {
     store.loadSubmission(sub);
     setEditingSubmission(sub);
   };
 
+  /** After a successful edit, close the modal and refresh the table. */
   const handleEditSuccess = () => {
     setEditingSubmission(null);
     fetchSubmissions();
     fetchStats();
   };
 
+  /**
+   * Export filtered submissions as a CSV file.
+   * Creates a temporary <a> element to trigger the browser download.
+   */
   const handleExportCSV = async () => {
     try {
       const blob = await adminService.exportCSV({
@@ -111,8 +166,22 @@ export default function AdminDashboard() {
     }
   };
 
+  // ── Computed Values ───────────────────────────────────────────────────
+
   const totalPages = Math.ceil(total / limit);
 
+  /**
+   * Calculates the fulfillment status for a single submission by comparing
+   * total ordered quantities against total shipped quantities across all batches.
+   *
+   * Returns an object with { label, color, bg } for rendering the badge.
+   *
+   * Possible states:
+   *   - "Empty"     → no items in the order (edge case)
+   *   - "Pending"   → nothing shipped yet
+   *   - "Partial"   → some items shipped, but not all
+   *   - "Fulfilled" → all ordered quantities have been matched or exceeded
+   */
   const getFulfillmentStatus = (sub: Submission) => {
     const orderedItems = [
       ...(sub.selected_items || []),
@@ -136,9 +205,12 @@ export default function AdminDashboard() {
     return { label: 'Partial', color: 'var(--warning)', bg: 'rgba(245, 158, 11, 0.1)' };
   };
 
+  // ── Render ────────────────────────────────────────────────────────────
+
   return (
     <div className="admin-wrapper">
-      {/* Header */}
+
+      {/* ── Header ── */}
       <header className="admin-header">
         <div className="admin-header-left">
           <h1>AeroBay Admin</h1>
@@ -150,7 +222,7 @@ export default function AdminDashboard() {
         </div>
       </header>
 
-      {/* Stats */}
+      {/* ── Stats Cards ── */}
       {stats && (
         <div className="admin-stats-grid">
           <div className="admin-stat-card">
@@ -166,7 +238,7 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Filters */}
+      {/* ── Filters Bar ── */}
       <div className="admin-filters">
         <select value={filterCategory} onChange={(e) => { setFilterCategory(e.target.value); setPage(1); }}>
           <option value="">All Categories</option>
@@ -183,7 +255,7 @@ export default function AdminDashboard() {
         </button>
       </div>
 
-      {/* Table */}
+      {/* ── Submissions Table ── */}
       <div className="admin-table-wrap">
         <table className="admin-table">
           <thead>
@@ -199,9 +271,9 @@ export default function AdminDashboard() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px' }}>Loading…</td></tr>
+              <tr><td colSpan={7} style={{ textAlign: 'center', padding: '40px' }}>Loading…</td></tr>
             ) : submissions.length === 0 ? (
-              <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: 'var(--ink-muted)' }}>No submissions found</td></tr>
+              <tr><td colSpan={7} style={{ textAlign: 'center', padding: '40px', color: 'var(--ink-muted)' }}>No submissions found</td></tr>
             ) : (
               submissions.map(sub => (
                 <tr key={sub.id}>
@@ -214,6 +286,7 @@ export default function AdminDashboard() {
                   <td>{sub.lab_category}</td>
                   <td>{Array.isArray(sub.selected_items) ? sub.selected_items.length : 0}</td>
                   <td>
+                    {/* Fulfillment status badge — computed per-row */}
                     {(() => {
                       const status = getFulfillmentStatus(sub);
                       return (
@@ -224,6 +297,7 @@ export default function AdminDashboard() {
                     })()}
                   </td>
                   <td>
+                    {/* Action buttons: Edit, View, Delete */}
                     <div className="admin-actions">
                       <button className="admin-action-btn" onClick={() => handleEdit(sub)} title="Edit">✎</button>
                       <button className="admin-action-btn" onClick={() => setSelectedSubmission(sub)} title="View">👁</button>
@@ -237,7 +311,7 @@ export default function AdminDashboard() {
         </table>
       </div>
 
-      {/* Pagination */}
+      {/* ── Pagination ── */}
       {totalPages > 1 && (
         <div className="admin-pagination">
           <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="admin-btn-outline">← Prev</button>
@@ -246,6 +320,7 @@ export default function AdminDashboard() {
         </div>
       )}
 
+      {/* ── View Submission Modal (tabbed: Details + Logistics) ── */}
       {selectedSubmission && (
         <ViewSubmissionModal 
           submission={selectedSubmission}
@@ -258,6 +333,7 @@ export default function AdminDashboard() {
         />
       )}
 
+      {/* ── Edit Submission Modal (reuses Form components) ── */}
       {editingSubmission && (
         <EditSubmissionModal 
           submissionId={editingSubmission.id} 

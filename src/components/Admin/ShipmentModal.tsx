@@ -1,26 +1,69 @@
+/**
+ * ── ShipmentModal Component ──
+ *
+ * PURPOSE:
+ *   Allows the admin to log a new batch shipment against an existing order.
+ *   It intelligently computes which items still have remaining quantities
+ *   and presents only those for dispatch.
+ *
+ * DATA FLOW:
+ *   1. On mount, we merge selected_items + custom_items into one ordered list.
+ *   2. For each item, we scan ALL previous shipments to calculate total shipped.
+ *   3. We show only items where (orderedQty - shippedTotal) > 0.
+ *   4. On save, we append a new Shipment object to the existing shipments array
+ *      and persist it via PUT /api/admin/submissions/:id.
+ *
+ * WHY APPEND-ONLY?
+ *   We never mutate or delete existing shipment records from the frontend.
+ *   This ensures an immutable audit trail of all dispatches.
+ *
+ * SHIPMENT CODE:
+ *   Auto-generated in format "SHP-YYYYMMDD-XXXX" (4 random alphanumeric chars).
+ *   This is generated once on mount and displayed as read-only.
+ */
+
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { adminService } from '../../services/adminService';
 import type { Submission, Shipment } from '../../types';
 
+// ── Props ───────────────────────────────────────────────────────────────────
+
 interface ShipmentModalProps {
-  submission: Submission;
-  onClose: () => void;
-  onSuccess: () => void;
+  submission: Submission;   // The parent order we're shipping against
+  onClose: () => void;      // Called when modal is dismissed
+  onSuccess: () => void;    // Called after successful save — triggers dashboard refresh
 }
 
+// ── Component ───────────────────────────────────────────────────────────────
+
 export default function ShipmentModal({ submission, onClose, onSuccess }: ShipmentModalProps) {
+  /**
+   * Generate a unique shipment code.
+   * Format: SHP-YYYYMMDD-XXXX (e.g. SHP-20260502-A3KF)
+   * Uses Math.random for the suffix — acceptable for this use case since
+   * uniqueness is also guaranteed by the UUID `id` field.
+   */
   const generateCode = () => `SHP-${new Date().toISOString().split('T')[0].replace(/-/g, '')}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
   const [shipmentCode] = useState(generateCode());
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [status, setStatus] = useState('Dispatched');
   const [notes, setNotes] = useState('');
 
+  /**
+   * Build the unified ordered items list from both catalog items and custom items.
+   * Custom items use `itemName` instead of `name`, so we normalize them here.
+   */
   const orderedItems = [
     ...(submission.selected_items || []),
     ...(submission.custom_items || []).map(c => ({ name: c.itemName, quantity: Number(c.quantity) || 1 }))
   ];
 
+  /**
+   * For each ordered item, calculate how many units have already been shipped
+   * across all previous shipments, then derive the `remaining` count.
+   * We filter out items with remaining === 0 (fully shipped).
+   */
   const [shippingItems, setShippingItems] = useState(orderedItems.map(item => {
     const itemName = item.name || (item as any).itemName;
     const orderedQty = item.quantity ? Number(item.quantity) : 1;
@@ -34,13 +77,21 @@ export default function ShipmentModal({ submission, onClose, onSuccess }: Shipme
 
   const [isSaving, setIsSaving] = useState(false);
 
+  /**
+   * Handles quantity input changes with strict clamping.
+   * - Prevents negative values (Math.max(0, ...))
+   * - Prevents over-shipping (Math.min(max, ...))
+   * - Handles NaN from empty/invalid input gracefully
+   */
   const handleQtyChange = (name: string, val: string, max: number) => {
     const qty = parseInt(val, 10);
     const validQty = isNaN(qty) ? 0 : Math.max(0, Math.min(max, qty));
     setShippingItems(prev => prev.map(item => item.name === name ? { ...item, qty_shipped: validQty } : item));
   };
 
+  /** Persist the new shipment to the database. */
   const handleSave = async () => {
+    // Only include items where the user actually specified a quantity > 0
     const itemsToShip = shippingItems.filter(i => i.qty_shipped > 0).map(i => ({ name: i.name, qty_shipped: i.qty_shipped }));
     
     if (itemsToShip.length === 0) {
@@ -51,6 +102,7 @@ export default function ShipmentModal({ submission, onClose, onSuccess }: Shipme
     setIsSaving(true);
     const loadingToast = toast.loading('Logging shipment...');
 
+    // Build the new shipment record
     const newShipment: Shipment = {
       id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2),
       shipment_code: shipmentCode,
@@ -60,6 +112,7 @@ export default function ShipmentModal({ submission, onClose, onSuccess }: Shipme
       items: itemsToShip
     };
 
+    // APPEND to the existing shipments array (never mutate old records)
     const updatedShipments = [...(submission.shipments || []), newShipment];
 
     try {
@@ -71,7 +124,7 @@ export default function ShipmentModal({ submission, onClose, onSuccess }: Shipme
       } else {
         toast.error('Failed to log shipment');
       }
-    } catch (err) {
+    } catch {
       toast.dismiss(loadingToast);
       toast.error('An error occurred');
     } finally {
@@ -79,18 +132,24 @@ export default function ShipmentModal({ submission, onClose, onSuccess }: Shipme
     }
   };
 
+  /** Convenience: fill all qty_shipped fields to their remaining values. */
   const setAllToRemaining = () => {
     setShippingItems(prev => prev.map(item => ({ ...item, qty_shipped: item.remaining })));
   };
 
+  // ── Render ──────────────────────────────────────────────────────────────
+
   return (
     <div className="admin-modal-overlay" onClick={onClose} style={{ zIndex: 2000, padding: '40px 20px', alignItems: 'flex-start', overflowY: 'auto' }}>
       <div className="admin-modal" onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: '600px', margin: '0 auto' }}>
+
+        {/* ── Header ── */}
         <div className="admin-modal-header" style={{ position: 'sticky', top: 0, background: 'var(--surface-main)', zIndex: 10 }}>
           <h2>Log New Shipment</h2>
           <button className="admin-modal-close" onClick={onClose} disabled={isSaving}>×</button>
         </div>
         
+        {/* ── Shipment Metadata Fields ── */}
         <div className="admin-modal-body">
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
             <div className="form-group">
@@ -114,6 +173,7 @@ export default function ShipmentModal({ submission, onClose, onSuccess }: Shipme
             </div>
           </div>
 
+          {/* ── Items Table ── */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
             <h3 style={{ margin: 0, fontSize: '16px' }}>Items in this Shipment</h3>
             <button type="button" onClick={setAllToRemaining} style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontSize: '14px', fontWeight: 600 }}>Ship All Remaining</button>
@@ -155,6 +215,7 @@ export default function ShipmentModal({ submission, onClose, onSuccess }: Shipme
           )}
         </div>
 
+        {/* ── Footer Actions ── */}
         <div className="admin-modal-footer" style={{ padding: '20px', borderTop: '1px solid var(--border-light)', display: 'flex', justifyContent: 'flex-end', gap: '12px', background: 'var(--surface-main)' }}>
           <button className="admin-btn-outline" onClick={onClose} disabled={isSaving}>Cancel</button>
           <button className="admin-btn-primary" onClick={handleSave} disabled={isSaving || shippingItems.length === 0}>

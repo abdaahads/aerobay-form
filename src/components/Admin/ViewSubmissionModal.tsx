@@ -1,18 +1,48 @@
+/**
+ * ── ViewSubmissionModal Component ──
+ *
+ * PURPOSE:
+ *   A tabbed modal that provides two views for any submission:
+ *     Tab 1 — "Submission Details": school info, ordered items, missing items
+ *     Tab 2 — "Logistics & Fulfillment": shipment history + fulfillment progress
+ *
+ * ARCHITECTURE:
+ *   - Uses `useMemo` for all derived data to avoid recalculating on every render.
+ *   - The ShipmentModal is rendered as a sibling (not child) of the overlay,
+ *     using a React Fragment. This prevents z-index stacking context issues.
+ *   - On shipment success, we call `onRefresh()` which triggers the parent
+ *     (AdminDashboard) to re-fetch data from Supabase, giving us fresh
+ *     shipment data without local state gymnastics.
+ *
+ * WHY "MISSING ITEMS"?
+ *   The catalog (LAB_DATA) defines the complete set of items for a tier.
+ *   If a school's submission doesn't include all items (e.g. they unchecked some),
+ *   we show those as "missing" so the admin can follow up.
+ */
+
 import { useState, useMemo } from 'react';
 import type { Submission } from '../../types';
 import { LAB_DATA } from '../../data/labItems';
 import ShipmentModal from './ShipmentModal';
 
+// ── Props ───────────────────────────────────────────────────────────────────
+
 interface ViewSubmissionModalProps {
-  submission: Submission;
-  onClose: () => void;
-  onRefresh: () => void;
+  submission: Submission;   // The submission to display
+  onClose: () => void;      // Close the modal
+  onRefresh: () => void;    // Refresh dashboard data (called after shipment logged)
 }
+
+// ── Component ───────────────────────────────────────────────────────────────
 
 export default function ViewSubmissionModal({ submission, onClose, onRefresh }: ViewSubmissionModalProps) {
   const [activeTab, setActiveTab] = useState<'details' | 'logistics'>('details');
   const [isCreatingShipment, setIsCreatingShipment] = useState(false);
 
+  /**
+   * Compute "missing items" — catalog items for this tier that were NOT
+   * included in the submission. Helps the admin identify incomplete orders.
+   */
   const missingItems = useMemo(() => {
     const categoryData = LAB_DATA[submission.lab_category] || [];
     const allLabItems = categoryData.flatMap(g => g.items);
@@ -20,11 +50,24 @@ export default function ViewSubmissionModal({ submission, onClose, onRefresh }: 
     return allLabItems.filter(item => !selectedNames.has(item.name));
   }, [submission]);
 
+  /**
+   * Unified list of all ordered items (catalog + custom).
+   * Custom items are normalized to match the { name, quantity } shape.
+   */
   const orderedItems = useMemo(() => [
     ...(submission.selected_items || []),
     ...(submission.custom_items || []).map(c => ({ name: c.itemName, quantity: Number(c.quantity) || 1 }))
   ], [submission]);
 
+  /**
+   * Fulfillment progress data — for each ordered item, we calculate:
+   *   - orderedQty:   the quantity from the original order
+   *   - shippedTotal: sum of qty_shipped across ALL shipments for this item
+   *   - remaining:    max(0, ordered - shipped)
+   *   - status:       "Fulfilled" | "Partial" | "Pending"
+   *
+   * This powers the Fulfillment Progress table in the Logistics tab.
+   */
   const logisticsData = useMemo(() => {
     return orderedItems.map(item => {
       const itemName = item.name || (item as any).itemName;
@@ -44,22 +87,28 @@ export default function ViewSubmissionModal({ submission, onClose, onRefresh }: 
     });
   }, [orderedItems, submission.shipments]);
 
+  /** After a shipment is successfully logged, close the shipment modal and refresh. */
   const handleShipmentSuccess = () => {
     setIsCreatingShipment(false);
-    onRefresh(); // Refresh dashboard data to get updated shipments
+    onRefresh();
   };
+
+  // ── Render ──────────────────────────────────────────────────────────────
 
   return (
     <>
+      {/* ── Main Modal Overlay ── */}
       <div className="admin-modal-overlay" onClick={onClose} style={{ zIndex: 1000, padding: '40px 20px', alignItems: 'flex-start', overflowY: 'auto' }}>
         <div className="admin-modal" onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '900px', margin: '0 auto', overflow: 'hidden' }}>
           
+          {/* ── Header with Tabs ── */}
           <div className="admin-modal-header" style={{ paddingBottom: 0, flexDirection: 'column', alignItems: 'stretch' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2>Submission: {submission.school_name}</h2>
               <button className="admin-modal-close" onClick={onClose}>×</button>
             </div>
             
+            {/* Tab navigation — styled as an underline tab bar */}
             <div style={{ display: 'flex', gap: '24px', borderBottom: '1px solid var(--border-light)' }}>
               <button 
                 style={{ background: 'none', border: 'none', padding: '12px 0', borderBottom: activeTab === 'details' ? '2px solid var(--primary)' : '2px solid transparent', color: activeTab === 'details' ? 'var(--primary)' : 'var(--ink-muted)', fontWeight: activeTab === 'details' ? 600 : 400, cursor: 'pointer', fontSize: '15px' }}
@@ -76,10 +125,16 @@ export default function ViewSubmissionModal({ submission, onClose, onRefresh }: 
             </div>
           </div>
 
+          {/* ── Tab Body ── */}
           <div className="admin-modal-body" style={{ background: 'var(--surface-alt)', minHeight: '400px' }}>
             
+            {/* ════════════════════════════════════════════════════════════ */}
+            {/* TAB 1: SUBMISSION DETAILS                                  */}
+            {/* ════════════════════════════════════════════════════════════ */}
             {activeTab === 'details' && (
               <div style={{ background: 'var(--surface-main)', padding: '24px', borderRadius: '12px', border: '1px solid var(--border-light)' }}>
+                
+                {/* School & contact info grid */}
                 <div className="admin-detail-grid">
                   <div><strong>School:</strong> {submission.school_name}</div>
                   <div><strong>Code:</strong> {submission.school_code || '—'}</div>
@@ -92,6 +147,7 @@ export default function ViewSubmissionModal({ submission, onClose, onRefresh }: 
                   <div><strong>Created:</strong> {new Date(submission.created_at).toLocaleString()}</div>
                 </div>
 
+                {/* Additional notes (if any) */}
                 {submission.additional_notes && (
                   <div style={{ marginTop: '24px' }}>
                     <strong>Notes:</strong>
@@ -99,6 +155,7 @@ export default function ViewSubmissionModal({ submission, onClose, onRefresh }: 
                   </div>
                 )}
 
+                {/* Selected catalog items */}
                 {Array.isArray(submission.selected_items) && submission.selected_items.length > 0 && (
                   <div style={{ marginTop: '24px' }}>
                     <strong>Selected Items ({submission.selected_items.length}):</strong>
@@ -113,6 +170,7 @@ export default function ViewSubmissionModal({ submission, onClose, onRefresh }: 
                   </div>
                 )}
 
+                {/* Missing items — catalog items NOT in the order */}
                 {missingItems.length > 0 && (
                   <div style={{ marginTop: '24px' }}>
                     <strong>Missing Items ({missingItems.length}):</strong>
@@ -126,6 +184,7 @@ export default function ViewSubmissionModal({ submission, onClose, onRefresh }: 
                   </div>
                 )}
 
+                {/* Custom (non-catalog) items */}
                 {Array.isArray(submission.custom_items) && submission.custom_items.length > 0 && (
                   <div style={{ marginTop: '24px' }}>
                     <strong>Custom Items:</strong>
@@ -142,10 +201,13 @@ export default function ViewSubmissionModal({ submission, onClose, onRefresh }: 
               </div>
             )}
 
+            {/* ════════════════════════════════════════════════════════════ */}
+            {/* TAB 2: LOGISTICS & FULFILLMENT                             */}
+            {/* ════════════════════════════════════════════════════════════ */}
             {activeTab === 'logistics' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 
-                {/* Shipments List */}
+                {/* ── Shipment History Section ── */}
                 <div style={{ background: 'var(--surface-main)', padding: '24px', borderRadius: '12px', border: '1px solid var(--border-light)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                     <h3 style={{ margin: 0, fontSize: '18px' }}>Shipment History</h3>
@@ -153,13 +215,16 @@ export default function ViewSubmissionModal({ submission, onClose, onRefresh }: 
                   </div>
                   
                   {!(submission.shipments && submission.shipments.length > 0) ? (
+                    // Empty state
                     <div style={{ padding: '32px', textAlign: 'center', color: 'var(--ink-muted)', background: 'var(--surface-alt)', borderRadius: '8px' }}>
                       No shipments have been logged yet for this order.
                     </div>
                   ) : (
+                    // Shipment cards — one per batch dispatch
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                       {submission.shipments.map((shipment) => (
                         <div key={shipment.id} style={{ border: '1px solid var(--border-light)', borderRadius: '8px', padding: '16px' }}>
+                          {/* Shipment header: code, date, status badge */}
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                             <div>
                               <strong style={{ display: 'block', fontSize: '15px' }}>{shipment.shipment_code}</strong>
@@ -171,8 +236,10 @@ export default function ViewSubmissionModal({ submission, onClose, onRefresh }: 
                               </span>
                             </div>
                           </div>
+                          {/* Optional notes */}
                           {shipment.notes && <p style={{ fontSize: '13px', margin: '0 0 12px 0', color: 'var(--ink-light)' }}>{shipment.notes}</p>}
                           
+                          {/* Items included in this batch */}
                           <div style={{ background: 'var(--surface-alt)', padding: '12px', borderRadius: '6px' }}>
                             <strong style={{ fontSize: '12px', color: 'var(--ink-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Items in this batch:</strong>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
@@ -189,7 +256,7 @@ export default function ViewSubmissionModal({ submission, onClose, onRefresh }: 
                   )}
                 </div>
 
-                {/* Fulfillment Progress */}
+                {/* ── Fulfillment Progress Table ── */}
                 <div style={{ background: 'var(--surface-main)', padding: '24px', borderRadius: '12px', border: '1px solid var(--border-light)' }}>
                   <h3 style={{ margin: '0 0 16px 0', fontSize: '18px' }}>Fulfillment Progress</h3>
                   <div style={{ overflowX: 'auto' }}>
@@ -232,6 +299,7 @@ export default function ViewSubmissionModal({ submission, onClose, onRefresh }: 
         </div>
       </div>
 
+      {/* ── Shipment Creation Modal (rendered as sibling to avoid z-index issues) ── */}
       {isCreatingShipment && (
         <ShipmentModal 
           submission={submission} 

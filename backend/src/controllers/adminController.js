@@ -1,8 +1,34 @@
+/**
+ * ── Admin Controller ──
+ *
+ * Handles all HTTP requests for the admin dashboard.
+ * Each method follows the Express (req, res, next) pattern.
+ * Errors are forwarded to the global error handler via next(error).
+ *
+ * SECURITY WARNING:
+ *   The auth middleware is currently DISABLED in routes/admin.js.
+ *   In production, ALL these endpoints should require a valid JWT.
+ *   Without auth, anyone who discovers /api/admin/* can read, modify,
+ *   or delete all submission data.
+ *
+ * INPUT VALIDATION WARNING:
+ *   updateSubmission() passes req.body directly to Supabase without
+ *   validating or sanitizing the fields. While Supabase has column-level
+ *   type constraints, a malicious actor could overwrite unexpected fields
+ *   (e.g. sync_status, ip_address). Consider adding an allowlist of
+ *   updatable fields before going to production.
+ */
+
 import { supabaseService } from '../services/supabaseService.js';
 import { SYNC_STATUS } from '../utils/constants.js';
 import { AsyncParser } from 'json2csv';
 
 export const adminController = {
+  /**
+   * GET /api/admin/submissions
+   * Returns a paginated list of submissions with optional filters.
+   * Query params: limit, offset, category, dateFrom, dateTo, syncStatus
+   */
   async getSubmissions(req, res, next) {
     try {
       const limit = parseInt(req.query.limit) || 15;
@@ -29,6 +55,11 @@ export const adminController = {
     }
   },
 
+  /**
+   * GET /api/admin/submissions/:id
+   * Returns a single submission by UUID.
+   * Returns 404 if the submission doesn't exist.
+   */
   async getSubmission(req, res, next) {
     try {
       const data = await supabaseService.getSubmissionById(req.params.id);
@@ -40,6 +71,17 @@ export const adminController = {
     }
   },
 
+  /**
+   * PUT /api/admin/submissions/:id
+   * Updates a submission. Accepts any partial set of fields.
+   *
+   * Used for TWO purposes:
+   *   1. Editing form fields (school_name, selected_items, etc.)
+   *   2. Appending shipment records (shipments array)
+   *
+   * TODO: Add field allowlist to prevent overwriting sensitive columns
+   *       like sync_status, ip_address, or user_agent.
+   */
   async updateSubmission(req, res, next) {
     try {
       const data = await supabaseService.updateSubmission(req.params.id, req.body);
@@ -49,6 +91,11 @@ export const adminController = {
     }
   },
 
+  /**
+   * DELETE /api/admin/submissions/:id
+   * Permanently removes a submission from the database.
+   * Consider implementing soft-delete (is_deleted flag) for audit trails.
+   */
   async deleteSubmission(req, res, next) {
     try {
       await supabaseService.deleteSubmission(req.params.id);
@@ -58,6 +105,10 @@ export const adminController = {
     }
   },
 
+  /**
+   * GET /api/admin/dashboard/stats
+   * Returns aggregate counts: total submissions + per-category breakdown.
+   */
   async getDashboardStats(req, res, next) {
     try {
       const stats = await supabaseService.getStats();
@@ -67,13 +118,21 @@ export const adminController = {
     }
   },
 
+  /**
+   * GET /api/admin/submissions/export/csv
+   * Exports submissions as a CSV file with optional filters.
+   * Uses json2csv's AsyncParser for streaming large datasets.
+   *
+   * NOTE: The limit of 10000 is a pragmatic cap. For truly large datasets,
+   * consider server-side streaming or paginated export.
+   */
   async exportCSV(req, res, next) {
     try {
       const { category, dateFrom, dateTo } = req.query;
       
-      // Get all records matching filters without limit
+      // Get all records matching filters (high limit acts as "all")
       const data = await supabaseService.getSubmissions({
-        limit: 10000, // Practically all for this use case
+        limit: 10000,
         offset: 0,
         category,
         dateFrom,
