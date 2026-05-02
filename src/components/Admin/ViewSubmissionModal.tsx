@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import type { Submission } from '../../types';
 import { LAB_DATA } from '../../data/labItems';
 import ShipmentModal from './ShipmentModal';
@@ -158,7 +158,7 @@ export default function ViewSubmissionModal({ submission, onClose, onRefresh }: 
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                      {submission.shipments.map((shipment, idx) => (
+                      {submission.shipments.map((shipment) => (
                         <div key={shipment.id} style={{ border: '1px solid var(--border-light)', borderRadius: '8px', padding: '16px' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                             <div>

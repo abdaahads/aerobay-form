@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { adminService } from '../../services/adminService';
-import type { Submission, Shipment, ShippedItem } from '../../types';
+import type { Submission, Shipment } from '../../types';
 
 interface ShipmentModalProps {
   submission: Submission;
@@ -11,7 +11,7 @@ interface ShipmentModalProps {
 
 export default function ShipmentModal({ submission, onClose, onSuccess }: ShipmentModalProps) {
   const generateCode = () => `SHP-${new Date().toISOString().split('T')[0].replace(/-/g, '')}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
-  const [shipmentCode, setShipmentCode] = useState(generateCode());
+  const [shipmentCode] = useState(generateCode());
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [status, setStatus] = useState('Dispatched');
   const [notes, setNotes] = useState('');

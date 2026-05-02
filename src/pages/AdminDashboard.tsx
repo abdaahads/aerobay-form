@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { adminService } from '../services/adminService';
 import { useFormStore } from '../store/formStore';
 import type { Submission, DashboardStats, LabCategoryName } from '../types';
-import { LAB_DATA } from '../data/labItems';
+
 import EditSubmissionModal from '../components/Admin/EditSubmissionModal';
 import ViewSubmissionModal from '../components/Admin/ViewSubmissionModal';
 import toast from 'react-hot-toast';
