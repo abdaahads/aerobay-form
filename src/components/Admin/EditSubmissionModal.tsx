@@ -53,18 +53,18 @@ export default function EditSubmissionModal({ submissionId, onClose, onSuccess }
       const selectedItems = store.getSelectedItems();
       const validCustomItems = store.customItems.filter(c => c.itemName.trim());
 
-      const payload = {
+      const payload: Partial<Submission> = {
         school_name: store.schoolName,
-        school_code: store.schoolCode || null,
+        school_code: store.schoolCode,
         contact_person: store.contactPerson,
         contact_email: store.contactEmail,
-        contact_phone: store.contactPhone || null,
+        contact_phone: store.contactPhone,
         lab_category: store.selectedCategory,
         selected_items: selectedItems,
         custom_items: validCustomItems,
         submitted_by_name: store.submitterName,
-        target_date: store.targetDate || null,
-        additional_notes: store.additionalNotes || null,
+        target_date: store.targetDate,
+        additional_notes: store.additionalNotes,
       };
 
       const result = await adminService.updateSubmission(submissionId, payload);

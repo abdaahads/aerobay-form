@@ -157,7 +157,7 @@ export const useFormStore = create<FormStore>((set, get) => ({
         if (newStates[key]) {
           newStates[key] = {
             included: true,
-            quantity: si.quantity || si.qty || 1, // fallback just in case
+            quantity: si.quantity || 1,
             remarks: si.remarks || ''
           };
         }
