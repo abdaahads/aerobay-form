@@ -116,8 +116,9 @@ export const useFormStore = create<FormStore>((set, get) => ({
   /**
    * When the user picks a lab category (Basix/Standard/Advanced/Premium):
    * 1. Load all items for that category from the master catalog.
-   * 2. Build a fresh itemStates map with defaults (not included, catalog qty).
-   * 3. This wipes any previous item selections — by design.
+   * 2. Build a fresh itemStates map with ALL items selected by default.
+   *    This reflects the business rule that a full tier is ordered as a package.
+   * 3. Users can then deselect individual items or adjust quantities.
    */
   setCategory: (category) => {
     const groups = LAB_DATA[category] || [];
@@ -125,7 +126,7 @@ export const useFormStore = create<FormStore>((set, get) => ({
     groups.forEach(group => {
       group.items.forEach(item => {
         const key = `${item.sno}-${group.group}`;
-        newStates[key] = { included: false, quantity: item.qty, remarks: '' };
+        newStates[key] = { included: true, quantity: item.qty, remarks: '' };
       });
     });
     set({ selectedCategory: category, itemStates: newStates });
