@@ -13,7 +13,9 @@
  */
 
 import { useState, useMemo } from 'react';
-import type { Submission } from '../../types';
+import toast from 'react-hot-toast';
+import { adminService } from '../../services/adminService';
+import type { Submission, Shipment } from '../../types';
 import { LAB_DATA } from '../../data/labItems';
 import ShipmentModal from './ShipmentModal';
 
@@ -27,6 +29,7 @@ interface ViewSubmissionModalProps {
 export default function ViewSubmissionModal({ submission, initialTab = 'details', onClose, onRefresh }: ViewSubmissionModalProps) {
   const [activeTab, setActiveTab] = useState<'details' | 'logistics'>(initialTab);
   const [isCreatingShipment, setIsCreatingShipment] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   // ── Computed Data ─────────────────────────────────────────────────────
 
@@ -70,6 +73,37 @@ export default function ViewSubmissionModal({ submission, initialTab = 'details'
   const handleShipmentSuccess = () => {
     setIsCreatingShipment(false);
     onRefresh();
+  };
+
+  /**
+   * Transition a shipment from "Dispatched" to "Delivered".
+   * This updates the specific shipment object within the submissions JSONB array.
+   */
+  const handleMarkDelivered = async (shipmentId: string) => {
+    if (isUpdating) return;
+    
+    setIsUpdating(true);
+    const loadingToast = toast.loading('Updating shipment status...');
+
+    const updatedShipments = (submission.shipments || []).map(s => 
+      s.id === shipmentId ? { ...s, status: 'Delivered' } : s
+    );
+
+    try {
+      const result = await adminService.updateSubmission(submission.id, { shipments: updatedShipments } as Partial<Submission>);
+      toast.dismiss(loadingToast);
+      if (result.success) {
+        toast.success('Shipment marked as Delivered!');
+        onRefresh();
+      } else {
+        toast.error('Failed to update status');
+      }
+    } catch (err) {
+      toast.dismiss(loadingToast);
+      toast.error('An error occurred');
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   // ── Render ──────────────────────────────────────────────────────────
@@ -253,14 +287,27 @@ export default function ViewSubmissionModal({ submission, initialTab = 'details'
                                   {new Date(shipment.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
                                 </div>
                               </div>
-                              <span style={{ 
-                                display: 'inline-flex', alignItems: 'center', gap: '6px',
-                                padding: '8px 16px', borderRadius: '100px', fontSize: '13px', fontWeight: 700, 
-                                background: shipment.status === 'Delivered' ? '#DCFCE7' : '#DBEAFE', 
-                                color: shipment.status === 'Delivered' ? '#166534' : '#1E40AF' 
-                              }}>
-                                {shipment.status === 'Delivered' ? '✅' : '🚚'} {shipment.status}
-                              </span>
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+                                <span style={{ 
+                                  display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                  padding: '8px 16px', borderRadius: '100px', fontSize: '13px', fontWeight: 700, 
+                                  background: shipment.status === 'Delivered' ? '#DCFCE7' : '#DBEAFE', 
+                                  color: shipment.status === 'Delivered' ? '#166534' : '#1E40AF' 
+                                }}>
+                                  {shipment.status === 'Delivered' ? '✅' : '🚚'} {shipment.status}
+                                </span>
+                                
+                                {shipment.status === 'Dispatched' && (
+                                  <button 
+                                    className="admin-btn-outline" 
+                                    onClick={() => handleMarkDelivered(shipment.id)}
+                                    disabled={isUpdating}
+                                    style={{ padding: '6px 12px', fontSize: '12px', fontWeight: 700, borderColor: '#3B82F6', color: '#2563EB', background: 'white' }}
+                                  >
+                                    Mark as Delivered
+                                  </button>
+                                )}
+                              </div>
                             </div>
 
                             {shipment.notes && (
