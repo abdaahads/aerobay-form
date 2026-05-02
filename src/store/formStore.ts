@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { LabCategoryName, CustomItem } from '../types';
+import type { LabCategoryName, CustomItem, Submission } from '../types';
 import { LAB_DATA } from '../data/labItems';
 
 interface ItemState {
@@ -44,6 +44,7 @@ interface FormStore {
   setSubmitting: (val: boolean) => void;
   setSubmitted: (val: boolean) => void;
   resetForm: () => void;
+  loadSubmission: (submission: Submission) => void;
 
   // Computed helpers
   getSelectedItems: () => { sno: number; name: string; group: string; quantity: number; remarks: string; included: boolean }[];
@@ -135,6 +136,52 @@ export const useFormStore = create<FormStore>((set, get) => ({
   setSubmitted: (val) => set({ isSubmitted: val }),
 
   resetForm: () => set({ ...initialState, customItems: [{ itemName: '', quantity: '', remarks: '' }] }),
+
+  loadSubmission: (sub) => {
+    const category = sub.lab_category;
+    const groups = LAB_DATA[category] || [];
+    const newStates: Record<string, ItemState> = {};
+    
+    // Default empty states
+    groups.forEach(group => {
+      group.items.forEach(item => {
+        const key = `${item.sno}-${group.group}`;
+        newStates[key] = { included: false, quantity: item.qty, remarks: '' };
+      });
+    });
+
+    // Apply saved items
+    if (sub.selected_items && Array.isArray(sub.selected_items)) {
+      sub.selected_items.forEach(si => {
+        const key = `${si.sno}-${si.group}`;
+        if (newStates[key]) {
+          newStates[key] = {
+            included: true,
+            quantity: si.quantity || si.qty || 1, // fallback just in case
+            remarks: si.remarks || ''
+          };
+        }
+      });
+    }
+
+    set({
+      schoolName: sub.school_name || '',
+      schoolCode: sub.school_code || '',
+      contactPerson: sub.contact_person || '',
+      contactEmail: sub.contact_email || '',
+      contactPhone: sub.contact_phone || '',
+      selectedCategory: category,
+      itemStates: newStates,
+      customItems: Array.isArray(sub.custom_items) && sub.custom_items.length > 0 
+        ? sub.custom_items 
+        : [{ itemName: '', quantity: '', remarks: '' }],
+      submitterName: sub.submitted_by_name || '',
+      targetDate: sub.target_date || '',
+      additionalNotes: sub.additional_notes || '',
+      isSubmitting: false,
+      isSubmitted: false,
+    });
+  },
 
   getSelectedItems: () => {
     const { selectedCategory, itemStates } = get();

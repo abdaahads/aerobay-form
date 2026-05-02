@@ -2,8 +2,10 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { adminService } from '../services/adminService';
+import { useFormStore } from '../store/formStore';
 import type { Submission, DashboardStats, LabCategoryName } from '../types';
 import { LAB_DATA } from '../data/labItems';
+import EditSubmissionModal from '../components/Admin/EditSubmissionModal';
 import toast from 'react-hot-toast';
 import '../styles/admin.css';
 
@@ -17,6 +19,9 @@ export default function AdminDashboard() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
+  const [editingSubmission, setEditingSubmission] = useState<Submission | null>(null);
+  
+  const store = useFormStore();
 
   // Filters
   const [filterCategory, setFilterCategory] = useState<string>('');
@@ -71,11 +76,21 @@ export default function AdminDashboard() {
       fetchSubmissions();
       fetchStats();
     } catch {
+    } catch {
       toast.error('Delete failed');
     }
   };
 
+  const handleEdit = (sub: Submission) => {
+    store.loadSubmission(sub);
+    setEditingSubmission(sub);
+  };
 
+  const handleEditSuccess = () => {
+    setEditingSubmission(null);
+    fetchSubmissions();
+    fetchStats();
+  };
 
   const handleExportCSV = async () => {
     try {
@@ -191,6 +206,7 @@ export default function AdminDashboard() {
                   <td>{Array.isArray(sub.selected_items) ? sub.selected_items.length : 0}</td>
                   <td>
                     <div className="admin-actions">
+                      <button className="admin-action-btn" onClick={() => handleEdit(sub)} title="Edit">✎</button>
                       <button className="admin-action-btn" onClick={() => setSelectedSubmission(sub)} title="View">👁</button>
                       <button className="admin-action-btn admin-action-delete" onClick={() => handleDelete(sub.id)} title="Delete">🗑</button>
                     </div>
@@ -285,6 +301,14 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
+      )}
+
+      {editingSubmission && (
+        <EditSubmissionModal 
+          submissionId={editingSubmission.id} 
+          onClose={() => setEditingSubmission(null)} 
+          onSuccess={handleEditSuccess} 
+        />
       )}
     </div>
   );
