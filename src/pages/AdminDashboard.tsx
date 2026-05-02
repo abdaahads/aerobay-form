@@ -76,7 +76,6 @@ export default function AdminDashboard() {
       fetchSubmissions();
       fetchStats();
     } catch {
-    } catch {
       toast.error('Delete failed');
     }
   };
