@@ -2,6 +2,7 @@ import React from 'react';
 import toast from 'react-hot-toast';
 import { useFormStore } from '../../store/formStore';
 import { adminService } from '../../services/adminService';
+import type { Submission } from '../../types';
 import SchoolInfoSection from '../Form/SchoolInfoSection';
 import LabCategorySelector from '../Form/LabCategorySelector';
 import ItemSelectionTable from '../Form/ItemSelectionTable';

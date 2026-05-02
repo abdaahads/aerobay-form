@@ -28,6 +28,20 @@ export interface CustomItem {
   remarks: string;
 }
 
+export interface ShippedItem {
+  name: string;
+  qty_shipped: number;
+}
+
+export interface Shipment {
+  id: string;
+  shipment_code: string;
+  date: string;
+  status: string;
+  items: ShippedItem[];
+  notes: string;
+}
+
 export interface SchoolInfo {
   schoolName: string;
   schoolCode: string;
@@ -70,6 +84,7 @@ export interface Submission {
   submitted_by_name: string;
   target_date: string;
   additional_notes: string;
+  shipments?: Shipment[];
   created_at: string;
   updated_at: string;
   is_deleted?: boolean;

@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS form_submissions (
   lab_category VARCHAR(50) NOT NULL CHECK (lab_category IN ('Basix', 'Standard', 'Advanced', 'Premium')),
   selected_items JSONB NOT NULL DEFAULT '[]',
   custom_items JSONB NOT NULL DEFAULT '[]',
+  shipments JSONB NOT NULL DEFAULT '[]',
   submitted_by_name VARCHAR(255) NOT NULL,
   target_date DATE,
   additional_notes TEXT,

@@ -6,6 +6,7 @@ import { useFormStore } from '../store/formStore';
 import type { Submission, DashboardStats, LabCategoryName } from '../types';
 import { LAB_DATA } from '../data/labItems';
 import EditSubmissionModal from '../components/Admin/EditSubmissionModal';
+import ViewSubmissionModal from '../components/Admin/ViewSubmissionModal';
 import toast from 'react-hot-toast';
 import '../styles/admin.css';
 
@@ -112,20 +113,28 @@ export default function AdminDashboard() {
 
   const totalPages = Math.ceil(total / limit);
 
-  const missingItems = useMemo(() => {
-    if (!selectedSubmission) return [];
-    
-    // All items from the category
-    const categoryData = LAB_DATA[selectedSubmission.lab_category] || [];
-    const allLabItems = categoryData.flatMap(g => g.items);
+  const getFulfillmentStatus = (sub: Submission) => {
+    const orderedItems = [
+      ...(sub.selected_items || []),
+      ...(sub.custom_items || []).map(c => ({ name: c.itemName, quantity: Number(c.quantity) || 1 }))
+    ];
+    if (orderedItems.length === 0) return { label: 'Empty', color: 'var(--ink-muted)', bg: 'var(--surface-alt)' };
 
-    // Selected items
-    const selected = selectedSubmission.selected_items || [];
-    const selectedNames = new Set(selected.map(item => item.name));
+    let totalOrdered = 0;
+    let totalShipped = 0;
 
-    // Return items that are not in selected
-    return allLabItems.filter(item => !selectedNames.has(item.name));
-  }, [selectedSubmission]);
+    orderedItems.forEach(item => {
+      totalOrdered += item.quantity ? Number(item.quantity) : 1;
+      (sub.shipments || []).forEach(shipment => {
+        const shippedItem = shipment.items.find(i => i.name === (item.name || (item as any).itemName));
+        if (shippedItem) totalShipped += shippedItem.qty_shipped;
+      });
+    });
+
+    if (totalShipped === 0) return { label: 'Pending', color: 'var(--danger)', bg: 'rgba(239, 68, 68, 0.1)' };
+    if (totalShipped >= totalOrdered) return { label: 'Fulfilled', color: 'var(--success)', bg: 'rgba(16, 185, 129, 0.1)' };
+    return { label: 'Partial', color: 'var(--warning)', bg: 'rgba(245, 158, 11, 0.1)' };
+  };
 
   return (
     <div className="admin-wrapper">
@@ -184,6 +193,7 @@ export default function AdminDashboard() {
               <th>Contact</th>
               <th>Category</th>
               <th>Items</th>
+              <th>Fulfillment</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -203,6 +213,16 @@ export default function AdminDashboard() {
                   </td>
                   <td>{sub.lab_category}</td>
                   <td>{Array.isArray(sub.selected_items) ? sub.selected_items.length : 0}</td>
+                  <td>
+                    {(() => {
+                      const status = getFulfillmentStatus(sub);
+                      return (
+                        <span style={{ display: 'inline-block', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 600, color: status.color, background: status.bg }}>
+                          {status.label}
+                        </span>
+                      );
+                    })()}
+                  </td>
                   <td>
                     <div className="admin-actions">
                       <button className="admin-action-btn" onClick={() => handleEdit(sub)} title="Edit">✎</button>
@@ -226,80 +246,16 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Detail Modal */}
       {selectedSubmission && (
-        <div className="admin-modal-overlay" onClick={() => setSelectedSubmission(null)}>
-          <div className="admin-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="admin-modal-header">
-              <h2>Submission Details</h2>
-              <button className="admin-modal-close" onClick={() => setSelectedSubmission(null)}>×</button>
-            </div>
-            <div className="admin-modal-body">
-              <div className="admin-detail-grid">
-                <div><strong>School:</strong> {selectedSubmission.school_name}</div>
-                <div><strong>Code:</strong> {selectedSubmission.school_code || '—'}</div>
-                <div><strong>Contact:</strong> {selectedSubmission.contact_person}</div>
-                <div><strong>Email:</strong> {selectedSubmission.contact_email}</div>
-                <div><strong>Phone:</strong> {selectedSubmission.contact_phone || '—'}</div>
-                <div><strong>Category:</strong> {selectedSubmission.lab_category}</div>
-                <div><strong>Submitted By:</strong> {selectedSubmission.submitted_by_name}</div>
-                <div><strong>Target Date:</strong> {selectedSubmission.target_date || '—'}</div>
-
-                <div><strong>Created:</strong> {new Date(selectedSubmission.created_at).toLocaleString()}</div>
-              </div>
-
-              {selectedSubmission.additional_notes && (
-                <div style={{ marginTop: '16px' }}>
-                  <strong>Notes:</strong>
-                  <p style={{ marginTop: '4px', color: 'var(--ink-muted)' }}>{selectedSubmission.additional_notes}</p>
-                </div>
-              )}
-
-              {Array.isArray(selectedSubmission.selected_items) && selectedSubmission.selected_items.length > 0 && (
-                <div style={{ marginTop: '16px' }}>
-                  <strong>Selected Items ({selectedSubmission.selected_items.length}):</strong>
-                  <div className="admin-items-list">
-                    {selectedSubmission.selected_items.map((item, i) => (
-                      <div key={i} className="admin-item-chip">
-                        {item.name} × {item.quantity}
-                        {item.remarks && <span style={{ fontSize: '11px', color: 'var(--ink-muted)' }}> — {item.remarks}</span>}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {missingItems.length > 0 && (
-                <div style={{ marginTop: '16px' }}>
-                  <strong>Missing Items ({missingItems.length}):</strong>
-                  <div className="admin-items-list" style={{ marginTop: '8px' }}>
-                    {missingItems.map((item, i) => (
-                      <div key={i} className="admin-item-chip" style={{ opacity: 0.6 }}>
-                        {item.name} <span style={{ fontSize: '11px', marginLeft: '4px' }}>(Expected Qty: {item.qty})</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {Array.isArray(selectedSubmission.custom_items) && selectedSubmission.custom_items.length > 0 && (
-                <div style={{ marginTop: '16px' }}>
-                  <strong>Custom Items:</strong>
-                  <div className="admin-items-list">
-                    {selectedSubmission.custom_items.map((item, i) => (
-                      <div key={i} className="admin-item-chip">
-                        {item.itemName} × {item.quantity}
-                        {item.remarks && <span style={{ fontSize: '11px', color: 'var(--ink-muted)' }}> — {item.remarks}</span>}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-
-            </div>
-          </div>
-        </div>
+        <ViewSubmissionModal 
+          submission={selectedSubmission}
+          onClose={() => setSelectedSubmission(null)}
+          onRefresh={() => {
+            fetchSubmissions();
+            fetchStats();
+            setSelectedSubmission(null);
+          }}
+        />
       )}
 
       {editingSubmission && (
