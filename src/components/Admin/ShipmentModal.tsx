@@ -151,75 +151,92 @@ export default function ShipmentModal({ submission, onClose, onSuccess }: Shipme
         
         {/* ── Shipment Metadata Fields ── */}
         <div className="admin-modal-body">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '40px' }}>
             <div className="form-group">
-              <label className="form-label">Shipment Code</label>
-              <input type="text" className="form-input" value={shipmentCode} readOnly style={{ background: 'var(--surface-alt)', color: 'var(--ink-muted)' }} />
+              <label className="form-label">Shipment Batch Code</label>
+              <input type="text" className="form-input" value={shipmentCode} readOnly style={{ background: '#F1F5F9', color: 'var(--ink-muted)', fontWeight: 600, borderStyle: 'dashed' }} />
             </div>
             <div className="form-group">
               <label className="form-label">Dispatch Date</label>
               <input type="date" className="form-input" value={date} onChange={e => setDate(e.target.value)} />
             </div>
             <div className="form-group">
-              <label className="form-label">Status</label>
+              <label className="form-label">Delivery Status</label>
               <select className="form-input" value={status} onChange={e => setStatus(e.target.value)}>
-                <option value="Dispatched">Dispatched</option>
-                <option value="Delivered">Delivered</option>
+                <option value="Dispatched">🚚 Dispatched</option>
+                <option value="Delivered">✅ Delivered</option>
               </select>
             </div>
             <div className="form-group">
-              <label className="form-label">Notes (Optional)</label>
-              <input type="text" className="form-input" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Courier info, etc." />
+              <label className="form-label">Internal Notes (Optional)</label>
+              <input type="text" className="form-input" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Courier name, tracking ID, etc." />
             </div>
           </div>
 
           {/* ── Items Table ── */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <h3 style={{ margin: 0, fontSize: '16px' }}>Items in this Shipment</h3>
-            <button type="button" onClick={setAllToRemaining} style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontSize: '14px', fontWeight: 600 }}>Ship All Remaining</button>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: 'var(--ink)' }}>Items to Dispatch</h3>
+            <button 
+              type="button" 
+              onClick={setAllToRemaining} 
+              style={{ background: '#EEF2FF', border: 'none', color: 'var(--primary)', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 700 }}
+            >
+              Ship All Remaining
+            </button>
           </div>
           
           {shippingItems.length === 0 ? (
-            <div style={{ padding: '24px', textAlign: 'center', background: 'var(--surface-alt)', borderRadius: '8px' }}>
-              All ordered items have already been fully shipped!
+            <div style={{ padding: '40px', textAlign: 'center', background: '#F8FAFC', borderRadius: '16px', border: '2px dashed var(--border-line)', color: 'var(--ink-muted)' }}>
+              <div style={{ fontSize: '32px', marginBottom: '8px' }}>🎉</div>
+              <strong>Order Fully Fulfilled</strong>
+              <div style={{ fontSize: '14px', marginTop: '4px' }}>All items have already been dispatched.</div>
             </div>
           ) : (
-            <table className="admin-table" style={{ border: '1px solid var(--border-light)', borderRadius: '8px', overflow: 'hidden' }}>
-              <thead style={{ background: 'var(--surface-alt)' }}>
-                <tr>
-                  <th>Item Name</th>
-                  <th>Remaining</th>
-                  <th style={{ width: '120px' }}>Qty to Ship</th>
-                </tr>
-              </thead>
-              <tbody>
-                {shippingItems.map((item, i) => (
-                  <tr key={i}>
-                    <td>{item.name}</td>
-                    <td>{item.remaining}</td>
-                    <td>
-                      <input 
-                        type="number" 
-                        className="form-input" 
-                        style={{ padding: '4px 8px', height: 'auto', minHeight: '32px' }} 
-                        value={item.qty_shipped || ''} 
-                        onChange={e => handleQtyChange(item.name, e.target.value, item.remaining)} 
-                        min={0} 
-                        max={item.remaining} 
-                      />
-                    </td>
+            <div style={{ border: '1px solid var(--border-line)', borderRadius: '16px', overflow: 'hidden', background: 'white' }}>
+              <table className="admin-table">
+                <thead style={{ background: '#F8FAFC' }}>
+                  <tr>
+                    <th>Item Description</th>
+                    <th style={{ textAlign: 'center', width: '100px' }}>Left</th>
+                    <th style={{ width: '140px' }}>Qty to Ship</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {shippingItems.map((item, i) => (
+                    <tr key={i}>
+                      <td style={{ fontWeight: 600 }}>{item.name}</td>
+                      <td style={{ textAlign: 'center' }}>
+                        <span style={{ background: '#F1F5F9', padding: '4px 10px', borderRadius: '6px', fontSize: '13px', fontWeight: 700 }}>{item.remaining}</span>
+                      </td>
+                      <td>
+                        <input 
+                          type="number" 
+                          className="form-input" 
+                          style={{ padding: '8px 12px', textAlign: 'center', fontWeight: 700, borderColor: item.qty_shipped > 0 ? 'var(--primary)' : 'var(--border-line)' }} 
+                          value={item.qty_shipped || ''} 
+                          onChange={e => handleQtyChange(item.name, e.target.value, item.remaining)} 
+                          min={0} 
+                          max={item.remaining} 
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
 
         {/* ── Footer Actions ── */}
-        <div className="admin-modal-footer" style={{ padding: '20px', borderTop: '1px solid var(--border-light)', display: 'flex', justifyContent: 'flex-end', gap: '12px', background: 'var(--surface-main)' }}>
-          <button className="admin-btn-outline" onClick={onClose} disabled={isSaving}>Cancel</button>
-          <button className="admin-btn-primary" onClick={handleSave} disabled={isSaving || shippingItems.length === 0}>
-            {isSaving ? 'Saving...' : 'Save Shipment'}
+        <div className="admin-modal-footer" style={{ padding: '24px 40px', borderTop: '1px solid var(--border-line)', display: 'flex', justifyContent: 'flex-end', gap: '16px', background: '#F8FAFC', borderRadius: '0 0 20px 20px' }}>
+          <button className="admin-btn-outline" style={{ padding: '12px 24px', fontWeight: 600 }} onClick={onClose} disabled={isSaving}>Cancel</button>
+          <button 
+            className="admin-btn-primary" 
+            style={{ padding: '12px 32px', fontWeight: 700, background: 'var(--ink)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} 
+            onClick={handleSave} 
+            disabled={isSaving || shippingItems.length === 0}
+          >
+            {isSaving ? 'Logging...' : 'Confirm Shipment'}
           </button>
         </div>
       </div>

@@ -185,96 +185,98 @@ export default function ViewSubmissionModal({ submission, initialTab = 'details'
             {/* TAB 2: SHIPMENT TRACKING (Amazon-style)                 */}
             {/* ════════════════════════════════════════════════════════ */}
             {activeTab === 'logistics' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
                 
                 {/* ── Fulfillment Summary Cards ── */}
-                <div className="fulfillment-summary">
-                  <div className="fulfillment-summary-item">
+                <div className="fulfillment-summary" style={{ gap: '20px' }}>
+                  <div className="fulfillment-summary-item" style={{ background: 'white', boxShadow: 'var(--shadow-sm)', border: 'none' }}>
                     <div className="value" style={{ color: 'var(--ink)' }}>{totals.ordered}</div>
-                    <div className="label">Total Ordered</div>
+                    <div className="label">Total Units Ordered</div>
                   </div>
-                  <div className="fulfillment-summary-item">
-                    <div className="value" style={{ color: '#3B82F6' }}>{totals.shipped}</div>
-                    <div className="label">Units Shipped</div>
+                  <div className="fulfillment-summary-item" style={{ background: '#EFF6FF', border: '1px solid #DBEAFE' }}>
+                    <div className="value" style={{ color: '#2563EB' }}>{totals.shipped}</div>
+                    <div className="label">Total Units Shipped</div>
                   </div>
-                  <div className="fulfillment-summary-item">
-                    <div className="value" style={{ color: totals.remaining > 0 ? '#EF4444' : '#10B981' }}>{totals.remaining}</div>
-                    <div className="label">Remaining</div>
+                  <div className="fulfillment-summary-item" style={{ background: totals.remaining > 0 ? '#FEF2F2' : '#F0FDF4', border: totals.remaining > 0 ? '1px solid #FEE2E2' : '1px solid #DCFCE7' }}>
+                    <div className="value" style={{ color: totals.remaining > 0 ? '#DC2626' : '#16A34A' }}>{totals.remaining}</div>
+                    <div className="label">Units Remaining</div>
                   </div>
                 </div>
 
                 {/* ── Overall Progress Bar ── */}
-                <div style={{ background: 'white', padding: '24px', borderRadius: '12px', border: '1px solid var(--border-line)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                    <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600 }}>Overall Fulfillment</h3>
-                    <span style={{ fontSize: '24px', fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: totals.percentage >= 100 ? '#10B981' : totals.percentage > 0 ? '#F59E0B' : '#EF4444' }}>
+                <div style={{ background: 'white', padding: '32px', borderRadius: '20px', boxShadow: 'var(--shadow-sm)', border: '1px solid var(--border-line)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '16px' }}>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: 'var(--ink)' }}>Fulfillment Progress</h3>
+                      <div style={{ fontSize: '14px', color: 'var(--ink-muted)', marginTop: '4px' }}>
+                        {totals.shipped} of {totals.ordered} total units dispatched across {(submission.shipments || []).length} batches
+                      </div>
+                    </div>
+                    <span style={{ fontSize: '36px', fontWeight: 800, fontFamily: "'Outfit', sans-serif", color: totals.percentage >= 100 ? '#10B981' : totals.percentage > 0 ? '#F59E0B' : '#EF4444', lineHeight: 1 }}>
                       {totals.percentage}%
                     </span>
                   </div>
-                  <div className="fulfillment-progress-bar" style={{ height: '12px' }}>
+                  <div className="fulfillment-progress-bar" style={{ height: '16px', background: '#F1F5F9' }}>
                     <div className="fulfillment-progress-fill" style={{ 
                       width: `${totals.percentage}%`, 
-                      background: totals.percentage >= 100 ? 'linear-gradient(90deg, #10B981, #34D399)' : totals.percentage > 0 ? 'linear-gradient(90deg, #F59E0B, #FBBF24)' : '#E2E8F0'
+                      background: totals.percentage >= 100 ? 'linear-gradient(90deg, #10B981, #34D399)' : totals.percentage > 0 ? 'linear-gradient(90deg, #F59E0B, #FBBF24)' : '#E2E8F0',
+                      boxShadow: '0 0 12px rgba(16, 185, 129, 0.2)'
                     }} />
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', fontSize: '12px', color: 'var(--ink-muted)' }}>
-                    <span>{totals.shipped} of {totals.ordered} units shipped</span>
-                    <span>{(submission.shipments || []).length} batch{(submission.shipments || []).length !== 1 ? 'es' : ''} dispatched</span>
                   </div>
                 </div>
 
                 {/* ── Shipment Timeline ── */}
-                <div style={{ background: 'white', padding: '24px', borderRadius: '12px', border: '1px solid var(--border-line)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                    <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600 }}>Shipment Timeline</h3>
-                    <button className="admin-btn-primary" onClick={() => setIsCreatingShipment(true)} style={{ padding: '8px 16px', fontSize: '13px' }}>
-                      + Log New Shipment
+                <div style={{ background: 'white', padding: '32px', borderRadius: '20px', boxShadow: 'var(--shadow-sm)', border: '1px solid var(--border-line)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: 'var(--ink)' }}>Dispatch Timeline</h3>
+                    <button className="admin-btn-primary" onClick={() => setIsCreatingShipment(true)} style={{ padding: '10px 24px', fontSize: '14px', fontWeight: 700, background: 'var(--ink)' }}>
+                      📦 Log New Shipment
                     </button>
                   </div>
                   
                   {!(submission.shipments && submission.shipments.length > 0) ? (
-                    <div style={{ padding: '48px 24px', textAlign: 'center', background: '#F8FAFC', borderRadius: '12px', border: '2px dashed var(--border-line)' }}>
-                      <div style={{ fontSize: '36px', marginBottom: '12px' }}>📦</div>
-                      <div style={{ fontWeight: 600, marginBottom: '4px' }}>No shipments yet</div>
-                      <div style={{ fontSize: '13px', color: 'var(--ink-muted)' }}>Click "Log New Shipment" to record your first dispatch</div>
+                    <div style={{ padding: '60px 24px', textAlign: 'center', background: '#F8FAFC', borderRadius: '16px', border: '2px dashed var(--border-line)' }}>
+                      <div style={{ fontSize: '48px', marginBottom: '16px' }}>🚛</div>
+                      <div style={{ fontWeight: 700, fontSize: '18px', color: 'var(--ink)' }}>No Dispatches Recorded</div>
+                      <div style={{ fontSize: '15px', color: 'var(--ink-muted)', marginTop: '8px' }}>Start by logging your first shipment batch.</div>
                     </div>
                   ) : (
                     <div className="shipment-timeline">
                       {[...(submission.shipments)].reverse().map((shipment) => (
                         <div key={shipment.id} className="shipment-timeline-item">
-                          <div className={`shipment-timeline-dot ${shipment.status === 'Delivered' ? 'delivered' : 'dispatched'}`} />
+                          <div className={`shipment-timeline-dot ${shipment.status === 'Delivered' ? 'delivered' : 'dispatched'}`} style={{ width: '18px', height: '18px', left: '-32px' }} />
                           <div className="shipment-timeline-content">
-                            {/* Shipment header */}
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                               <div>
-                                <div style={{ fontWeight: 700, fontSize: '15px', letterSpacing: '0.02em' }}>{shipment.shipment_code}</div>
-                                <div style={{ fontSize: '13px', color: 'var(--ink-muted)', marginTop: '2px' }}>
+                                <div style={{ fontWeight: 800, fontSize: '18px', letterSpacing: '-0.01em', color: 'var(--ink)' }}>{shipment.shipment_code}</div>
+                                <div style={{ fontSize: '14px', color: 'var(--ink-muted)', marginTop: '4px', fontWeight: 500 }}>
                                   {new Date(shipment.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
                                 </div>
                               </div>
                               <span style={{ 
-                                display: 'inline-flex', alignItems: 'center', gap: '4px',
-                                padding: '5px 12px', borderRadius: '100px', fontSize: '12px', fontWeight: 600, 
-                                background: shipment.status === 'Delivered' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(59, 130, 246, 0.1)', 
-                                color: shipment.status === 'Delivered' ? '#059669' : '#2563EB' 
+                                display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                padding: '8px 16px', borderRadius: '100px', fontSize: '13px', fontWeight: 700, 
+                                background: shipment.status === 'Delivered' ? '#DCFCE7' : '#DBEAFE', 
+                                color: shipment.status === 'Delivered' ? '#166534' : '#1E40AF' 
                               }}>
-                                {shipment.status === 'Delivered' ? '✓' : '→'} {shipment.status}
+                                {shipment.status === 'Delivered' ? '✅' : '🚚'} {shipment.status}
                               </span>
                             </div>
 
-                            {/* Notes */}
                             {shipment.notes && (
-                              <p style={{ fontSize: '13px', margin: '0 0 12px 0', color: 'var(--ink-light)', fontStyle: 'italic' }}>"{shipment.notes}"</p>
+                              <div style={{ background: '#F8FAFC', padding: '12px 16px', borderRadius: '10px', borderLeft: '4px solid #CBD5E1', margin: '0 0 16px 0', fontSize: '14px', color: 'var(--ink-light)', lineHeight: 1.5 }}>
+                                {shipment.notes}
+                              </div>
                             )}
                             
-                            {/* Items in this batch */}
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                               {shipment.items.map((item, i) => (
                                 <span key={i} style={{ 
-                                  fontSize: '12px', background: '#F1F5F9', padding: '4px 10px', borderRadius: '6px', 
-                                  border: '1px solid #E2E8F0', fontWeight: 500 
+                                  fontSize: '13px', background: 'white', padding: '6px 14px', borderRadius: '8px', 
+                                  border: '1px solid var(--border-line)', fontWeight: 600, color: 'var(--ink)',
+                                  boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
                                 }}>
-                                  {item.name} <strong style={{ color: '#3B82F6' }}>×{item.qty_shipped}</strong>
+                                  {item.name} <strong style={{ color: '#2563EB', marginLeft: '4px' }}>×{item.qty_shipped}</strong>
                                 </span>
                               ))}
                             </div>
@@ -286,18 +288,18 @@ export default function ViewSubmissionModal({ submission, initialTab = 'details'
                 </div>
 
                 {/* ── Item-Level Fulfillment Grid ── */}
-                <div style={{ background: 'white', padding: '24px', borderRadius: '12px', border: '1px solid var(--border-line)' }}>
-                  <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: 600 }}>Item Fulfillment Breakdown</h3>
-                  <div style={{ overflowX: 'auto' }}>
-                    <table className="admin-table" style={{ border: '1px solid var(--border-line)', borderRadius: '8px', overflow: 'hidden' }}>
+                <div style={{ background: 'white', padding: '32px', borderRadius: '20px', boxShadow: 'var(--shadow-sm)', border: '1px solid var(--border-line)' }}>
+                  <h3 style={{ margin: '0 0 24px 0', fontSize: '18px', fontWeight: 700, color: 'var(--ink)' }}>Inventory Fulfillment Breakdown</h3>
+                  <div style={{ overflowX: 'auto', borderRadius: '12px', border: '1px solid var(--border-line)' }}>
+                    <table className="admin-table">
                       <thead>
-                        <tr>
-                          <th>Item</th>
-                          <th style={{ textAlign: 'center', width: '80px' }}>Ordered</th>
-                          <th style={{ textAlign: 'center', width: '80px' }}>Shipped</th>
-                          <th style={{ textAlign: 'center', width: '80px' }}>Left</th>
-                          <th style={{ minWidth: '140px' }}>Progress</th>
-                          <th style={{ width: '90px' }}>Status</th>
+                        <tr style={{ background: '#F8FAFC' }}>
+                          <th style={{ padding: '16px 24px' }}>Component Name</th>
+                          <th style={{ textAlign: 'center', width: '100px' }}>Ordered</th>
+                          <th style={{ textAlign: 'center', width: '100px' }}>Shipped</th>
+                          <th style={{ textAlign: 'center', width: '100px' }}>Pending</th>
+                          <th style={{ minWidth: '160px' }}>Progress</th>
+                          <th style={{ width: '120px' }}>Status</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -305,26 +307,27 @@ export default function ViewSubmissionModal({ submission, initialTab = 'details'
                           const pct = row.orderedQty > 0 ? Math.min(100, Math.round((row.shippedTotal / row.orderedQty) * 100)) : 0;
                           return (
                             <tr key={i}>
-                              <td style={{ fontWeight: 500 }}>{row.name}</td>
-                              <td style={{ textAlign: 'center' }}>{row.orderedQty}</td>
+                              <td style={{ fontWeight: 700, fontSize: '14px' }}>{row.name}</td>
+                              <td style={{ textAlign: 'center', fontWeight: 600 }}>{row.orderedQty}</td>
                               <td style={{ textAlign: 'center' }}>
-                                <strong style={{ color: row.shippedTotal > 0 ? '#3B82F6' : 'var(--ink-muted)' }}>{row.shippedTotal}</strong>
+                                <span style={{ color: '#2563EB', fontWeight: 800 }}>{row.shippedTotal}</span>
                               </td>
                               <td style={{ textAlign: 'center' }}>
-                                <strong style={{ color: row.remaining > 0 ? '#EF4444' : '#10B981' }}>{row.remaining}</strong>
+                                <span style={{ color: row.remaining > 0 ? '#DC2626' : '#16A34A', fontWeight: 800 }}>{row.remaining}</span>
                               </td>
-                              <td>
-                                <div className="fulfillment-progress-bar">
+                              <td style={{ verticalAlign: 'middle' }}>
+                                <div className="fulfillment-progress-bar" style={{ height: '10px' }}>
                                   <div className="fulfillment-progress-fill" style={{ 
                                     width: `${pct}%`, 
                                     background: pct >= 100 ? '#10B981' : pct > 0 ? '#F59E0B' : '#E2E8F0' 
                                   }} />
                                 </div>
+                                <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--ink-muted)', marginTop: '4px', textAlign: 'right' }}>{pct}%</div>
                               </td>
                               <td>
-                                {row.status === 'Fulfilled' && <span style={{ color: '#059669', fontWeight: 600, fontSize: '12px' }}>✓ Done</span>}
-                                {row.status === 'Partial' && <span style={{ color: '#D97706', fontWeight: 600, fontSize: '12px' }}>In Progress</span>}
-                                {row.status === 'Pending' && <span style={{ color: '#9CA3AF', fontWeight: 600, fontSize: '12px' }}>Pending</span>}
+                                {row.status === 'Fulfilled' && <span style={{ color: '#16A34A', background: '#F0FDF4', padding: '4px 10px', borderRadius: '6px', fontWeight: 700, fontSize: '12px' }}>COMPLETE</span>}
+                                {row.status === 'Partial' && <span style={{ color: '#D97706', background: '#FFFBEB', padding: '4px 10px', borderRadius: '6px', fontWeight: 700, fontSize: '12px' }}>PARTIAL</span>}
+                                {row.status === 'Pending' && <span style={{ color: '#64748B', background: '#F1F5F9', padding: '4px 10px', borderRadius: '6px', fontWeight: 700, fontSize: '12px' }}>PENDING</span>}
                               </td>
                             </tr>
                           );

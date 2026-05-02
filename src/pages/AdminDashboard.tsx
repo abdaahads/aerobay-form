@@ -234,22 +234,24 @@ export default function AdminDashboard() {
                 const info = getFulfillmentInfo(sub);
                 return (
                   <tr key={sub.id}>
-                    <td style={{ whiteSpace: 'nowrap' }}>{new Date(sub.created_at).toLocaleDateString()}</td>
+                    <td style={{ whiteSpace: 'nowrap', fontWeight: 600, color: 'var(--ink-muted)' }}>{new Date(sub.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
                     <td>
-                      <strong>{sub.school_name}</strong>
-                      <div style={{ fontSize: '12px', color: 'var(--ink-muted)' }}>{sub.contact_person}</div>
+                      <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--ink)' }}>{sub.school_name}</div>
+                      <div style={{ fontSize: '13px', color: 'var(--ink-muted)', marginTop: '2px', fontWeight: 500 }}>{sub.contact_person}</div>
                     </td>
                     <td>
-                      <span style={{ display: 'inline-block', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, background: '#F1F5F9', color: 'var(--ink)' }}>
+                      <span style={{ display: 'inline-block', padding: '6px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 700, background: '#F1F5F9', color: 'var(--ink)', letterSpacing: '0.02em' }}>
                         {sub.lab_category}
                       </span>
                     </td>
-                    <td>{Array.isArray(sub.selected_items) ? sub.selected_items.length : 0}</td>
+                    <td style={{ textAlign: 'center' }}>
+                      <span style={{ fontSize: '16px', fontWeight: 700 }}>{Array.isArray(sub.selected_items) ? sub.selected_items.length : 0}</span>
+                    </td>
 
                     {/* ── Fulfillment column with progress bar ── */}
                     <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div className="fulfillment-progress-bar" style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div className="fulfillment-progress-bar" style={{ flex: 1, height: '10px' }}>
                           <div
                             className="fulfillment-progress-fill"
                             style={{
@@ -258,28 +260,28 @@ export default function AdminDashboard() {
                             }}
                           />
                         </div>
-                        <span style={{ fontSize: '12px', fontWeight: 600, color: info.color, minWidth: '36px', textAlign: 'right' }}>
+                        <span style={{ fontSize: '14px', fontWeight: 800, color: info.color, minWidth: '40px', textAlign: 'right' }}>
                           {info.percentage}%
                         </span>
                       </div>
-                      <div style={{ fontSize: '11px', color: 'var(--ink-muted)', marginTop: '4px' }}>
-                        {info.shipped}/{info.ordered} units
+                      <div style={{ fontSize: '12px', color: 'var(--ink-muted)', marginTop: '6px', fontWeight: 600 }}>
+                        {info.shipped} / {info.ordered} units fulfilled
                       </div>
                     </td>
 
                     {/* ── Shipments count ── */}
-                    <td>
-                      <span style={{ fontWeight: 600 }}>{(sub.shipments || []).length}</span>
-                      <span style={{ color: 'var(--ink-muted)', fontSize: '12px', marginLeft: '4px' }}>batch{(sub.shipments || []).length !== 1 ? 'es' : ''}</span>
+                    <td style={{ textAlign: 'center' }}>
+                      <span style={{ fontWeight: 800, fontSize: '16px', color: 'var(--ink)' }}>{(sub.shipments || []).length}</span>
+                      <div style={{ color: 'var(--ink-muted)', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', marginTop: '2px' }}>batch{(sub.shipments || []).length !== 1 ? 'es' : ''}</div>
                     </td>
 
                     {/* ── Action Buttons ── */}
                     <td>
-                      <div className="admin-actions">
-                        <button className="admin-action-btn admin-action-ship" onClick={() => handleOpenShipping(sub)} title="Ship / Track">📦</button>
-                        <button className="admin-action-btn" onClick={() => handleOpenDetails(sub)} title="View Details">👁</button>
-                        <button className="admin-action-btn" onClick={() => handleEdit(sub)} title="Edit">✎</button>
-                        <button className="admin-action-btn admin-action-delete" onClick={() => handleDelete(sub.id)} title="Delete">🗑</button>
+                      <div className="admin-actions" style={{ gap: '10px' }}>
+                        <button className="admin-action-btn admin-action-ship" style={{ width: '40px', height: '40px', fontSize: '18px' }} onClick={() => handleOpenShipping(sub)} title="Ship / Track">📦</button>
+                        <button className="admin-action-btn" style={{ width: '40px', height: '40px', fontSize: '18px' }} onClick={() => handleOpenDetails(sub)} title="View Details">👁</button>
+                        <button className="admin-action-btn" style={{ width: '40px', height: '40px', fontSize: '18px' }} onClick={() => handleEdit(sub)} title="Edit">✎</button>
+                        <button className="admin-action-btn admin-action-delete" style={{ width: '40px', height: '40px', fontSize: '18px' }} onClick={() => handleDelete(sub.id)} title="Delete">🗑</button>
                       </div>
                     </td>
                   </tr>

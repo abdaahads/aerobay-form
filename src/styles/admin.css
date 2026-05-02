@@ -12,22 +12,24 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 40px;
+  margin-bottom: 48px;
   flex-wrap: wrap;
   gap: 16px;
 }
 
 .admin-header-left h1 {
-  font-size: 32px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 36px;
   font-weight: 800;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
   color: var(--ink);
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .admin-subtitle {
-  font-size: 15px;
+  font-size: 16px;
   color: var(--ink-muted);
+  font-weight: 500;
 }
 
 .admin-header-right {
@@ -178,20 +180,21 @@
 }
 
 .admin-table th {
-  padding: 16px 20px;
+  padding: 18px 24px;
   text-align: left;
-  font-weight: 600;
-  font-size: 12px;
+  font-weight: 700;
+  font-size: 13px;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   color: var(--ink-muted);
 }
 
 .admin-table td {
-  padding: 16px 20px;
+  padding: 20px 24px;
   border-bottom: 1px solid var(--border-line);
   color: var(--ink);
   vertical-align: middle;
+  font-size: 15px;
 }
 
 .admin-table tbody tr {
@@ -301,18 +304,19 @@
 
 .admin-modal-header h2 {
   font-family: 'Outfit', sans-serif;
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 24px;
+  font-weight: 700;
   color: var(--ink);
+  letter-spacing: -0.02em;
 }
 
 .admin-modal-close {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
   border: none;
   background: transparent;
-  font-size: 24px;
+  font-size: 32px;
   line-height: 1;
   cursor: pointer;
   display: flex;
@@ -328,47 +332,49 @@
 }
 
 .admin-modal-body {
-  padding: 32px;
+  padding: 40px;
 }
 
 .admin-detail-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  font-size: 14px;
+  gap: 24px;
+  font-size: 15px;
 }
 
 .admin-detail-grid div {
   background: #F8FAFC;
-  padding: 16px;
-  border-radius: 12px;
+  padding: 20px;
+  border-radius: 14px;
   border: 1px solid var(--border-line);
 }
 
 .admin-detail-grid div strong {
   display: block;
-  font-size: 12px;
+  font-size: 13px;
   text-transform: uppercase;
   color: var(--ink-muted);
-  margin-bottom: 6px;
-  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+  letter-spacing: 0.06em;
+  font-weight: 700;
 }
 
 .admin-items-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
+  gap: 10px;
+  margin-top: 16px;
 }
 
 .admin-item-chip {
   background: white;
   border: 1px solid var(--border-line);
   border-radius: 100px;
-  padding: 8px 16px;
-  font-size: 13px;
-  font-weight: 500;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
   box-shadow: var(--shadow-sm);
+  color: var(--ink);
 }
 
 /* ── Fulfillment Progress Bar ── */
@@ -436,14 +442,15 @@
 .shipment-timeline-content {
   background: white;
   border: 1px solid var(--border-line);
-  border-radius: 12px;
-  padding: 16px 20px;
+  border-radius: 16px;
+  padding: 24px 28px;
   box-shadow: var(--shadow-sm);
-  transition: box-shadow 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .shipment-timeline-content:hover {
   box-shadow: var(--shadow-md);
+  border-color: var(--primary);
 }
 
 /* ── Fulfillment Summary Card ── */
@@ -464,18 +471,49 @@
 
 .fulfillment-summary-item .value {
   font-family: 'Outfit', sans-serif;
-  font-size: 28px;
-  font-weight: 700;
+  font-size: 32px;
+  font-weight: 800;
   line-height: 1;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
 }
 
 .fulfillment-summary-item .label {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--ink-muted);
-  font-weight: 500;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
+}
+
+/* ── Form Readability Helpers ── */
+.form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 10px;
+  letter-spacing: 0.01em;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid var(--border-line);
+  border-radius: 10px;
+  font-size: 15px;
+  color: var(--ink);
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+}
+
+.form-group {
+  margin-bottom: 24px;
 }
 
 /* ── Responsive ── */
