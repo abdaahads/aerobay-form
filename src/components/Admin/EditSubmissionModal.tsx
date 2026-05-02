@@ -129,22 +129,21 @@ export default function EditSubmissionModal({ submissionId, onClose, onSuccess }
   // ── Render ──────────────────────────────────────────────────────────────
 
   return (
-    <div className="admin-modal-overlay" onClick={onClose} style={{ zIndex: 1000, overflowY: 'auto', padding: '40px 20px', alignItems: 'flex-start' }}>
-      <div className="admin-modal" onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: '900px', margin: '0 auto', overflow: 'hidden' }}>
+    <div className="admin-modal-overlay" onClick={onClose} style={{ zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+      <div className="admin-modal" onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: '900px', maxHeight: 'calc(100vh - 40px)', display: 'flex', flexDirection: 'column' }}>
 
-        {/* ── Sticky Header ── */}
-        <div className="admin-modal-header" style={{ position: 'sticky', top: 0, zIndex: 10, background: 'var(--surface-main)', borderBottom: '1px solid var(--border-light)' }}>
+        {/* ── Header (fixed at top of modal) ── */}
+        <div className="admin-modal-header" style={{ flexShrink: 0, background: 'var(--surface-main)', borderBottom: '1px solid var(--border-light)' }}>
           <h2>Edit Submission</h2>
           <button className="admin-modal-close" onClick={onClose} disabled={isUpdating}>×</button>
         </div>
         
         {/* 
-          ── Form Body ──
-          We reuse the exact same form section components here.
-          They all read/write from useFormStore(), which was pre-populated
-          via loadSubmission() before this modal was rendered.
+          ── Scrollable Form Body ──
+          flex: 1 + overflowY: auto makes this the scrollable region
+          while header and footer stay fixed.
         */}
-        <div className="admin-modal-body" style={{ padding: '0', background: 'var(--surface-alt)' }}>
+        <div className="admin-modal-body" style={{ flex: 1, overflowY: 'auto', padding: '0', background: 'var(--surface-alt)' }}>
           <div className="form-card" style={{ border: 'none', borderRadius: '0', boxShadow: 'none' }}>
             <form onSubmit={(e) => e.preventDefault()} noValidate>
               <SchoolInfoSection />
@@ -160,8 +159,8 @@ export default function EditSubmissionModal({ submissionId, onClose, onSuccess }
           </div>
         </div>
 
-        {/* ── Sticky Footer with Actions ── */}
-        <div className="admin-modal-footer" style={{ padding: '20px', borderTop: '1px solid var(--border-light)', display: 'flex', justifyContent: 'flex-end', gap: '12px', background: 'var(--surface-main)', position: 'sticky', bottom: 0, zIndex: 10 }}>
+        {/* ── Footer (fixed at bottom of modal) ── */}
+        <div className="admin-modal-footer" style={{ flexShrink: 0, padding: '20px', borderTop: '1px solid var(--border-light)', display: 'flex', justifyContent: 'flex-end', gap: '12px', background: 'var(--surface-main)' }}>
           <button className="admin-btn-outline" onClick={onClose} disabled={isUpdating}>
             Cancel
           </button>
